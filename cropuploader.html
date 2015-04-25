@@ -1,0 +1,30 @@
+<template name="cropUploader">
+	{{#if currentUser}}
+	<input type="file" class="crop-uploader-file"> <button class="crop-uploader-upload">Upload</button>
+	{{/if}}
+	<img id="thumbnail_img" class="hidden">
+</template>
+
+<template name="cropUploaderImages">
+	  <div class="images" id="images">
+		  {{#each images}}
+		  	<div class="thumbnail">
+		  		{{#if derivatives.thumbnail}}
+			  	<img src="{{derivatives.thumbnail}}" id="{{_id}}">
+		  		{{else}}
+		  		<img src="{{url}}" width="100" height="100" id="{{_id}}">
+		  		{{/if}}
+			  	<h6 class="id">{{_id}}</h6>
+		  	</div>
+		  {{/each}}
+		  <div class="preview thumbnail">
+			  <canvas id="thumbnail_canvas"></canvas>
+			  <h6 class="id">Preview</h6>
+		  </div>
+	  </div>
+</template>
+
+<template name="cropUploaderCropper">
+	<div class="image-container"><img src="{{url}}"></div>
+	<div class="img-preview"></div>
+</template>

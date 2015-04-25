@@ -1,0 +1,31 @@
+/* CSS declarations go here */
+
+h6.id {
+	margin:0;
+	padding:0;
+	text-align: center;
+}
+.thumbnail {
+	display: inline-block;
+}
+.hidden {
+	display: none;
+}
+div.image-container {
+	background-color: #aaa;
+	overflow: hidden;
+	width: 600px;
+	height: 600px;
+	text-align: center;
+	display: inline-block;
+}
+div.img-preview {
+	overflow: hidden;
+	width:400px;
+	height:400px;
+	display: inline-block;
+}
+div.img-preview.cropped {
+	width: 100px;
+	height: 100px;
+}

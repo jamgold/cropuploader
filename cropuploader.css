@@ -1,0 +1,13 @@
+/* CSS declarations go here */
+
+h6.id {
+	margin:0;
+	padding:0;
+	text-align: center;
+}
+.thumbnail {
+	display: inline-block;
+}
+.hidden {
+	display: none;
+}
