@@ -1,5 +1,5 @@
 <head>
-  <title>slingshot</title>
+  <title>cropuploader demo</title>
 </head>
 
 <body>
@@ -7,11 +7,9 @@
 </body>
 
 <template name="hello">
-	<h1>Welcome to Meteor &amp; Slingshot!</h1>{{>loginButtons}}
+	<h1>Welcome to Meteor &amp; Slingshot with CropUploader! {{>loginButtons}} </h1>
 
-  <button class="hello">Click Me</button>
-  <p>You've pressed the button {{counter}} times.</p>
-  {{>images}}
+	{{>images}}
 </template>
 
 <template name="images">
@@ -29,12 +27,27 @@
 			  	<h6 class="id">{{_id}}</h6>
 		  	</div>
 		  {{/each}}
+		{{else}}
+			Loading ...
 		{{/if}}
 		  <div class="preview thumbnail">
 			  <canvas id="thumbnail_canvas"></canvas>
 			  <h6 class="id">Preview</h6>
 		  </div>
 	</div>
+</template>
+
+<template name="image">
+	{{#if Template.subscriptionsReady}}
+		{{image}}
+		<button class="back">Back</button>
+		{{#if currentUser}}
+		<button class="btn btn-danger delete" imageid="{{imageid}}">Delete</button>
+		<button class="btn btn-info crop" imageid="{{imageid}}">Crop</button>
+		{{/if}}
+	{{else}}
+		Loading ...
+	{{/if}}
 </template>
 
 <template name="cropper">
@@ -44,7 +57,6 @@
 			<button class="btn rotate">Rotate</button>
 			{{#if currentUser}}
 			<button class="btn btn-success save" imageid="{{imageid}}">Save</button>
-			<button class="btn btn-danger delete" imageid="{{imageid}}">Delete</button>
 			{{/if}}
 			<button class="back">Back</button>
 		</div>

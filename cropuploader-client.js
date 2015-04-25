@@ -286,7 +286,7 @@ Template.cropUploaderCropper.onRendered(function () {
       canvas.height = img.height;
       ctx.drawImage( img, 0, 0 );
       var dataUrl = canvas.toDataURL("image/png");
-      localStorage.setItem( "savedImageData", dataUrl );
+      // localStorage.setItem( "savedImageData", dataUrl );
       // console.log(template.cropimage);
       // console.log('savedImageData', template.$(".image-container > img"));
       template.$(".image-container > img").attr('src', dataUrl );

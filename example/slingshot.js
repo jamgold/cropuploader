@@ -1,4 +1,5 @@
-MySlingShotName = 'fucketyfuck';
+MySlingShotName = 'cropuploader';
+MyDirectory = Meteor.isDevelopment ? 'slingshot' : 'demo';
 
 Slingshot.fileRestrictions(MySlingShotName, {
   allowedFileTypes: ["image/png", "image/jpeg", "image/gif"],
@@ -7,7 +8,7 @@ Slingshot.fileRestrictions(MySlingShotName, {
 
 if(Meteor.isClient)
 {
-	CropUploader.init(MySlingShotName, 'slingshot');
+	CropUploader.init(MySlingShotName, MyDirectory);
 
 	// counter starts at 0
 	Session.setDefault('counter', 0);
@@ -19,19 +20,19 @@ if(Meteor.isClient)
 
 	Template.hello.helpers({
 	  counter: function () {
-	    return Session.get('counter');
+		return Session.get('counter');
 	  },
 	});
 
 	Template.hello.events({
 	  'click button.hello': function () {
-	    // increment the counter when button is clicked
-	    Session.set('counter', Session.get('counter') + 1);
-	    Meteor.call('s3contents','slingshot', function(err,res){
-	      if(!err) res.forEach(function(obj){
-	        console.log(obj.Key);
-	      });
-	    });
+		// increment the counter when button is clicked
+		Session.set('counter', Session.get('counter') + 1);
+		Meteor.call('s3contents','slingshot', function(err,res){
+		  if(!err) res.forEach(function(obj){
+			console.log(obj.Key);
+		  });
+		});
 	  },
 	});
 
@@ -44,7 +45,7 @@ if(Meteor.isClient)
 	});
 	Template.images.helpers({
 	  images: function() {
-	    return CropUploader.images.find();
+		return CropUploader.images.find();
 	  }
 	});
 	Template.images.events({
@@ -61,47 +62,73 @@ if(Meteor.isClient)
 	  //   $('html').css('background','none');
 	  // },
 	  'click img': function(e,t) {
-	    // if(confirm('Delete this image?'))
-	    // {
-	    //   CropUploader.images.remove(e.target.id);
-	    // }
-	    Session.set('image', CropUploader.images.findOne( e.target.id) );
-	    Session.set('template', 'cropper');
+		// if(confirm('Delete this image?'))
+		// {
+		//   CropUploader.images.remove(e.target.id);
+		// }
+		// Session.set('image', CropUploader.images.findOne( e.target.id) );
+		Session.set('image', e.target.id);
+		Session.set('template', 'image');
 	  }
 	});
 
+	Template.image.onCreated(function(){
+		this.subscribe('cropUploaderImages',{_id: Session.get('image')});
+	});
+	Template.image.onDestroyed(function(){
+		$('html').css('background','none');
+	});
+	Template.image.events({
+		'click button.back': function () {
+			Session.set('template', 'hello');
+		},
+		'click button.crop': function () {
+			Session.set('template', 'cropper');
+		},
+		'click button.delete': function(e,t) {
+			if(confirm('Delete this image?'))
+			{
+			  var imageid = t.$(e.target).attr('imageid');
+			  CropUploader.images.remove(imageid);
+			  Session.set('template', 'hello');
+			}
+		},
+	});
+	Template.image.helpers({
+		image: function() {
+			var image = CropUploader.images.findOne( Session.get('image') );
+			$('html').css({
+				background: 'url('+image.url+') no-repeat center center fixed',
+				backgroundSize: 'contain'
+			});
+		}
+	});
+
 	Template.cropper.onCreated(function(){
-	  this.subscribe('cropUploaderImages');
+		this.subscribe('cropUploaderImages',{_id: Session.get('image')});
 	});
 	Template.cropper.helpers({
 	  imageid: function() {
-	    return Session.get('image')._id;
+		return Session.get('image');
 	  },
 	  url: function() {
-	    return Session.get('image').url;
+	  	var image = CropUploader.images.findOne( Session.get('image') );
+		return image.url;
 	  }
 	});
 	Template.cropper.events({
 	  'click button.back': function(){
-	    Session.set('template', 'hello');
-	  },
-	  'click button.delete': function(e,t) {
-	    if(confirm('Delete this image?'))
-	    {
-	      var imageid = t.$(e.target).attr('imageid');
-	      CropUploader.images.remove(imageid);
-	      Session.set('template', 'hello');
-	    }
+		Session.set('template', 'image');
 	  },
 	  'click button.save': function(e,t) {
-	    CropUploader.crop.save('thumbnail');
+		CropUploader.crop.save('thumbnail');
 	  },
 	  'click button.rotate': function(e,t) {
-	    CropUploader.crop.rotate();
+		CropUploader.crop.rotate();
 	  }
 	});
 
-	CropUploader.init(MySlingShotName, 'slingshot');
+	CropUploader.init(MySlingShotName, 'demo');
 }
 
 if(Meteor.isServer)
@@ -120,5 +147,5 @@ if(Meteor.isServer)
 	  key: function(file) {  }
 	});
 
-	CropUploader.init(MySlingShotName, Meteor.settings.S3Directory, true);
+	CropUploader.init(MySlingShotName, MyDirectory);
 }
