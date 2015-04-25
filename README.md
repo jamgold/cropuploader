@@ -1,10 +1,10 @@
 # Package to Upload and Crop images
 
+The purpose of this package is to provide an easy image upload that automatically creates a cropped derivative. Additionally the package provides a template to interactively crop an image to add/replace the derivative.
+
 ## requires meteor-slingshot and currently only supports Slingshot.S3Storage
 
 ### I never tested without anonymous upload, so accounts-password is also required as a minimum
-
-The purpose of this package is to provide an easy image upload that automatically creates a cropped derivative. Additionally the package provides a template to interactively crop an image to add/replace the derivative.
 
 Any app using this package must setup Slingshot and then call the `CropUploader.init` method with the name of the directive, and the subdirectory in the S3 bucket. In the example it is assumed that Meteor.settings provides the necessary parameters for AWS S3.
 

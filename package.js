@@ -18,7 +18,7 @@ Package.onUse(function(api) {
   // https://github.com/blueimp/JavaScript-Canvas-to-Blob
   api.versionsFrom('METEOR@1.0');
   api.use('standard-app-packages', ['client', 'server']);
-  api.use(['raix:md5','edgee:slingshot']);
+  api.use(['raix:md5@1.0.2','edgee:slingshot@0.6.2']);
   api.imply(['raix:md5','edgee:slingshot']);
 
   // Npm.require('knox');
