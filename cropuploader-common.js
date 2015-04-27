@@ -17,7 +17,8 @@ CropUploader = {
 			throw new Meteor.Error("The derivative to replace must be File or Blob");
 		// check(derivative, Blob);
 		var image = self.images.findOne(imageId);
-		if(!image) throw new Meteor.Error(403, "the provided image does not exist");
+		if(!image) throw new Meteor.Error(401, "the provided image does not exist");
+		if(image.userId != Meteor.userId()) throw new Meteor.Error(403, "you don't have permission to replace derivative for "+imageid);
 		//
 		// setup slingshot with uuid from parent
 		//
