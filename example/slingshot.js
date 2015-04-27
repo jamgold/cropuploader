@@ -89,23 +89,35 @@ if(Meteor.isClient)
 			if(confirm('Delete this image?'))
 			{
 			  var imageid = t.$(e.target).attr('imageid');
-			  CropUploader.images.remove(imageid);
-			  Session.set('template', 'hello');
+			  CropUploader.images.remove(imageid, function(err,res){
+			  	if(err) console.log(err);
+		  		else Session.set('template', 'hello');
+			  });
 			}
 		},
 	});
 	Template.image.helpers({
 		image: function() {
 			var image = CropUploader.images.findOne( Session.get('image') );
+			if(image)
 			$('html').css({
 				background: 'url('+image.url+') no-repeat center center fixed',
 				backgroundSize: 'contain'
 			});
+		},
+		imageid: function() {
+			var image = CropUploader.images.findOne( Session.get('image') );
+			return image ? image._id : null;
+		},
+		canEditImage: function() {
+			var image = CropUploader.images.findOne( Session.get('image') );
+			return image ? image.userId == Meteor.userId() : false;
 		}
 	});
 
 	Template.cropper.onCreated(function(){
 		this.subscribe('cropUploaderImages',{_id: Session.get('image')});
+		this.image = CropUploader.images.findOne( Session.get('image') );
 	});
 	Template.cropper.helpers({
 	  imageid: function() {
@@ -113,7 +125,12 @@ if(Meteor.isClient)
 	  },
 	  url: function() {
 	  	var image = CropUploader.images.findOne( Session.get('image') );
-		return image.url;
+	  	// var template = Template.instance();
+		return image ? image.url : '';
+	  },
+	  canSaveDerivative: function() {
+	  	var image = CropUploader.images.findOne( Session.get('image') );
+	  	return image ? image.userId == Meteor.userId() : false;
 	  }
 	});
 	Template.cropper.events({

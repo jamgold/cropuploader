@@ -41,7 +41,7 @@
 	{{#if Template.subscriptionsReady}}
 		{{image}}
 		<button class="back">Back</button>
-		{{#if currentUser}}
+		{{#if canEditImage}}
 		<button class="btn btn-danger delete" imageid="{{imageid}}">Delete</button>
 		<button class="btn btn-info crop" imageid="{{imageid}}">Crop</button>
 		{{/if}}
@@ -55,7 +55,7 @@
 		{{>cropUploaderCropper imageid=imageid url=url thumbnailWidth=200 thumbnailHeight=200}}
 		<div class="buttons">
 			<button class="btn rotate">Rotate</button>
-			{{#if currentUser}}
+			{{#if canSaveDerivative}}
 			<button class="btn btn-success save" imageid="{{imageid}}">Save</button>
 			{{/if}}
 			<button class="back">Back</button>
