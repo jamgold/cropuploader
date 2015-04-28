@@ -147,8 +147,8 @@ Template.cropUploader.events({
             uploader.send(blob, function (error, thumbnailUrl) {
               if (error) {
                 console.error('Error uploading', uploader.xhr.response);
-                alert (error);
-                CropUploader.errorMessage.set(error);
+                console.error(error);
+                CropUploader.errorMessage.set('Error uploading:'+error.reason);
               } else {
                 //
                 // we have uploaded the thumbnail, so now upload original
@@ -157,7 +157,8 @@ Template.cropUploader.events({
                   if (error) {
                     // Log service detailed response
                     console.error('Error uploading', uploader.xhr.response);
-                    CropUploader.errorMessage.set(error);
+                    console.error(error);
+                    CropUploader.errorMessage.set('Error uploading:'+error.reason);
                   } else {
                     //
                     // add uuid and md5hash to image object
@@ -191,7 +192,7 @@ Template.cropUploader.events({
       // in order to get the MD5 for the image, we need to read it on the client
       //
       template.reader.readAsDataURL(image);
-    } else alert('Please select file first');
+    } else CropUploader.errorMessage.set('Please select file first');
   },
 });
 Template.cropUploaderImages.onRendered(function(){
