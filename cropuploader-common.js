@@ -7,51 +7,65 @@ CropUploader = {
 	images: new Meteor.Collection('images'),
 	name: 'cropUploader',
 	urlBase: null,
-	replaceDerivative:function(imageId, name, derivative) {
-		var self = this;
-		// console.log( derivative );
-		check(imageId, String);
-		check(name, String);
-		// derivative needs to be File or Blob
-		if (! (derivative instanceof window.File) && ! (derivative instanceof window.Blob))
-			throw new Meteor.Error("The derivative to replace must be File or Blob");
-		// check(derivative, Blob);
-		var image = self.images.findOne(imageId);
-		if(!image) throw new Meteor.Error(401, "the provided image does not exist");
-		if(image.userId != Meteor.userId()) throw new Meteor.Error(403, "you don't have permission to replace derivative for "+imageid);
-		//
-		// setup slingshot with uuid from parent
-		//
-		var uploader = new Slingshot.Upload(self.name, {uuid: image.uuid });
-		var oldfile = name in image['derivatives'] ? image['derivatives'][name] : null;
-		// set name of blob so it will put in the right place
-		derivative.name = 'derivative/'+name+'/';
-		uploader.send(derivative, function (error, thumbnailUrl) {
-		  if (error) {
-			console.error('Error uploading', uploader.xhr.response);
-			alert (error);
-		  } else {
+	derivative: {
+		replace:function(imageId, name, derivative) {
+			var self = this;
+			// console.log( derivative );
+			check(imageId, String);
+			check(name, String);
+			// derivative needs to be File or Blob
+			if (! (derivative instanceof window.File) && ! (derivative instanceof window.Blob))
+				throw new Meteor.Error("The derivative to replace must be File or Blob");
+			// check(derivative, Blob);
+			var image = self.images.findOne(imageId);
+			if(!image) throw new Meteor.Error(401, "the provided image does not exist");
+			if(image.userId != Meteor.userId()) throw new Meteor.Error(403, "you don't have permission to replace derivative for "+imageid);
 			//
-			// update the collection object
+			// setup slingshot with uuid from parent
 			//
-			var set = {}
-			set['derivatives.'+name] = thumbnailUrl;
-			self.images.update(image._id,{$set: set}, function(err,res){
-				if(err) console.error(err);
-				else console.log('uploaded and updated', res);
-			});
-			//
-			// this should actually happen in the allow.update
-			//
-			if(oldfile)
-			{
-				// console.log('delete', oldfile);
-				Meteor.call('cropUploaderS3Delete', oldfile, function (error, result) {
-					if(error) console.err(error);
+			var uploader = new Slingshot.Upload(self.name, {uuid: image.uuid });
+			var oldfile = name in image['derivatives'] ? image['derivatives'][name] : null;
+			// set name of blob so it will put in the right place
+			derivative.name = 'derivative/'+name+'/';
+			uploader.send(derivative, function (error, thumbnailUrl) {
+			  if (error) {
+				console.error('Error uploading', uploader.xhr.response);
+				alert (error);
+			  } else {
+				//
+				// update the collection object
+				//
+				var set = {}
+				set['derivatives.'+name] = thumbnailUrl;
+				self.images.update(image._id,{$set: set}, function(err,res){
+					if(err) console.error(err);
+					else console.log('uploaded and updated', res);
 				});
-			}
-		  }
-		});
+				//
+				// this should actually happen in the allow.update
+				//
+				if(oldfile)
+				{
+					// console.log('delete', oldfile);
+					Meteor.call('cropUploaderS3Delete', oldfile, function (error, result) {
+						if(error) console.err(error);
+					});
+				}
+			  }
+			});
+		},
+	},
+	_hooks: {},
+	hooks: function(hooks) {
+		var self = this;
+		self._hooks = hooks;
+	},
+	insert:function(image) {
+		var self = this;
+		if('insert' in self._hooks && typeof self._hooks.insert == 'function')
+			image = self._hooks.insert(image);
+		if(image)
+			CropUploader.images.insert( image );
 	},
 	crop: {
 		template: null,
@@ -67,7 +81,7 @@ CropUploader = {
 			if(self.template.canvas && self.template.canvas.toBlob)
 			{
 			  self.template.canvas.toBlob(function(blob){
-				CropUploader.replaceDerivative( imageid, type, blob );
+				CropUploader.derivative.replace( imageid, type, blob );
 			  },'image/png');
 			} else console.log('no canvas', self.template.canvas);
 		},

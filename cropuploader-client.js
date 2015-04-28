@@ -1,5 +1,12 @@
 Template.cropUploader.onRendered(function () {
   var template = this;
+  _.map(this.data, function(val,key){
+    if(key != 'thumbnailWidth' && key != 'thumbnailHeight')
+    {
+      if(template.addons == undefined) template.addons = {};
+      template.addons[key] = val;
+    }
+  });
 
   this.thumbnailWidth = template.data.thumbnailWidth || undefined;
   this.thumbnailHeight = template.data.thumbnailHeight || undefined;
@@ -157,10 +164,12 @@ Template.cropUploader.events({
                     image.derivatives = {
                       thumbnail: thumbnailUrl
                     };
+                    if(template.addons)
+                      image = _.extend(image, template.addons);
                     //
                     // finally add it to the collection
                     //
-                    CropUploader.images.insert( image );
+                    CropUploader.insert(image);
                     file.val('');
                     $('.preview').addClass('hidden');
                   }

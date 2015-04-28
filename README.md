@@ -6,7 +6,9 @@ The purpose of this package is to provide an easy image upload that automaticall
 
 ### I never tested without anonymous upload, so accounts-password is also required as a minimum
 
-Any app using this package must setup Slingshot and then call the `CropUploader.init` method with the name of the directive, and the subdirectory in the S3 bucket. In the example it is assumed that Meteor.settings provides the necessary parameters for AWS S3.
+Any app using this package must setup Slingshot and then call the `CropUploader.init` method with the name of the directive, and the subdirectory in the S3 bucket.
+
+In the example directory is a complete example that assumes that Meteor.settings provides the necessary parameters for AWS S3.
 
 The package provides it's own collection to manage the uploaded images and their derivatives.
 
@@ -92,6 +94,14 @@ cropUploader will simply render
     <input type="file" class="crop-uploader-file"> <button class="crop-uploader-upload">Upload</button>
 ```
 
+You can add other fields to cropUploader which will then be added to the document saved (as long as they are not already part of the document, like uuid, md5hash, derivatives, name, size, type, userId, urlBase, created, relativeUrl)
+
+```{{>cropUploader thumbnailWidth=100 thumbnailHeight=100 imagetype="avatar"}}```
+
+Will allow you to find all the avatars a user has uploaded
+
+```CropUploader.images.find({imagetype:'avatar',userId: Meteor.userId()});```
+
 Here is a typical document from the CropUploader.images collection
 
 ```
@@ -163,5 +173,17 @@ Template.cropper.events({
   'click button.rotate': function(e,t) {
     CropUploader.crop.rotate();
   }
+});
+```
+
+## Hooks
+
+You can define an insert hook that will run on the client, as well as on the server
+
+```CropUploader.hooks({
+   insert: function(image) {
+    // add anything to the image object inserted into the collection
+    return image;
+   }
 });
 ```

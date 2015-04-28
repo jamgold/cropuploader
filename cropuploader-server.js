@@ -155,13 +155,15 @@ Meteor.publish('cropUploaderImages', function(query) {
 });
 
 CropUploader.images.allow({
-	insert: function(userId, doc) {
+	insert: function(userId, image) {
 		// https://buzzledom-slingshot.s3-us-west-1.amazonaws.com/slingshot/2014-09-26.jpg
-		doc.userId = userId;
-		doc.created = new Date();
-		doc.urlBase = CropUploader.knox.urlBase;
-		doc.relativeUrl = doc.url.split('//')[1].split('/').slice(1).join('/');
-		return true;
+		image.userId = userId;
+		image.created = new Date();
+		image.urlBase = CropUploader.knox.urlBase;
+		image.relativeUrl = image.url.split('//')[1].split('/').slice(1).join('/');
+		// if('insert' in CropUploader._hooks && typeof CropUploader._hooks.insert == 'function')
+		// 	image = CropUploader._hooks.insert(image);
+		return userId && image;
 	},
 	update: function(userId, doc, fieldNames, modifier) {
 		//

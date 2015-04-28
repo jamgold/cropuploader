@@ -1,6 +1,6 @@
 Package.describe({
   name: 'jamgold:cropuploader',
-  version: '0.0.1_2',
+  version: '0.0.2',
   // Brief, one-line summary of the package.
   summary: 'Use slingshot to upload images to S3 and create thumbnails',
   // URL to the Git repository containing the source code for this package.
@@ -25,7 +25,7 @@ Package.onUse(function(api) {
   Npm.require('fibers/future');
 
   api.export('CropUploader');
-  api.addFiles('cropuploader-common.js');
+  api.addFiles('cropuploader-common.js', ['client','server']);
   api.addFiles('cropuploader-server.js','server');
   api.addFiles(['cropper.min.js','cropper.min.css','canvas-to-blob.js','cropuploader.css','cropuploader.html','cropuploader-client.js'],'client');
 });
