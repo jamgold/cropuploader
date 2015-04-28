@@ -61,7 +61,7 @@ if(Meteor.isClient)
 }
 ```
 
-There are two easy templates that can be used. The first is the uploader itself, which just renders a File input and a button. You can pass in the size of the derivative thumbnail that should be generated. The package will take care of the events for the cropUploader template. As soon as a file is selected it will generate a preview in canvas#thumbnail_canvas. If that DOMelement does not exist, it will be created
+There are two easy templates that can be used. The first is the uploader itself, which just renders a File input and a button. You can pass in the size of the derivative thumbnail that should be generated. The package will take care of the events for the cropUploader template. As soon as a file is selected it will generate a preview in canvas#thumbnail_canvas. If that DOMelement does not exist, it will be created. You can provide your own ID for the canvas by specifying it with canvasID="yourID" when calling the template.
 
 ```
 <template name="images">
@@ -94,7 +94,7 @@ cropUploader will simply render
     <input type="file" class="crop-uploader-file"> <button class="crop-uploader-upload">Upload</button>
 ```
 
-You can add other fields to cropUploader which will then be added to the document saved (as long as they are not already part of the document, like uuid, md5hash, derivatives, name, size, type, userId, urlBase, created, relativeUrl)
+You can add other fields to cropUploader which will then be added to the document saved (as long as they are not already part of the document, like uuid, md5hash, derivatives, name, size, type, userId, urlBase, created, relativeUrl, canvasID, thumbnailID)
 
 ```{{>cropUploader thumbnailWidth=100 thumbnailHeight=100 imagetype="avatar"}}```
 
@@ -123,6 +123,8 @@ Here is a typical document from the CropUploader.images collection
   relativeUrl: '<aws dir>/0e0f77da-2d64-4f56-92e5-3ebccb554389.png'
 }
 ```
+
+## The Interactive Cropper
 
 The second template provided is called cropUploaderCropper and it requires the collection id of the image to be cropped and the url to the image. It again takes a width and height to determine the size of the resulting image. This template will render the awesome [cropper](https://github.com/fengyuanchen/cropper)
 

@@ -1,7 +1,8 @@
 Template.cropUploader.onRendered(function () {
   var template = this;
+
   _.map(this.data, function(val,key){
-    if(key != 'thumbnailWidth' && key != 'thumbnailHeight')
+    if(['thumbnailWidth', 'thumbnailHeight', 'canvasID', 'thumbnailID' ].indexOf(key) < 0)
     {
       if(template.addons == undefined) template.addons = {};
       template.addons[key] = val;
@@ -10,6 +11,11 @@ Template.cropUploader.onRendered(function () {
 
   this.thumbnailWidth = template.data.thumbnailWidth || undefined;
   this.thumbnailHeight = template.data.thumbnailHeight || undefined;
+  this.canvasID = template.data.canvasID || undefined;
+  this.thumbnailID = template.data.thumbnailID || undefined;
+
+  if(this.canvasID == undefined) this.canvasID = 'thumbnail_canvas';
+  if(this.thumbnailID == undefined) this.thumbnailID = 'thumbnail_img';
 
   if(this.thumbnailHeight == undefined && this.thumbnailWidth == undefined)
   {
@@ -19,29 +25,31 @@ Template.cropUploader.onRendered(function () {
   // console.info(this.view.name+'.rendered',this);
 
   this.reader = new FileReader();
-  this.preview = document.getElementById('images');
+  this.preview = document.getElementById('preview');
 
   if(!this.preview)
   {
+    console.log('cropUploader added div#preview');
     this.preview = document.createElement('div');
     this.preview.id = 'preview';
     document.body.appendChild(this.preview);
   }
-  this.thumbnail_img = document.getElementById('thumbnail_img');
+
+  this.thumbnail_img = document.getElementById(this.thumbnailID);
   if(!this.thumbnail_img)
   {
     // console.log('creating #thumbnail_img');
     this.thumbnail_img = document.createElement('img');
-    this.thumbnail_img.id = 'thumbnail_img';
+    this.thumbnail_img.id = this.thumbnailID;
     this.thumbnail_img.classList.add('hidden');
     this.preview.appendChild(this.thumbnail_img);
   }
 
-  this.thumbnailCanvas = document.getElementById('thumbnail_canvas');
+  this.thumbnailCanvas = document.getElementById(this.canvasID);
   if(!this.thumbnailCanvas)
   {
     this.thumbnailCanvas = document.createElement('canvas');
-    this.thumbnailCanvas.id = 'thumbnail_canvas';
+    this.thumbnailCanvas.id = this.canvasID;
     this.thumbnailCanvas.width = this.thumbnailWidth;
     this.thumbnailCanvas.height = this.thumbnailHeight;
     this.thumbnailCanvas.classList.add('hidden');
@@ -75,7 +83,7 @@ Template.cropUploader.onRendered(function () {
       }
       else
       {
-        cc.width = thumbnail_img.height;
+        cc.width = template.thumbnail_img.height;
       }
       template.thumbnailCanvas.width = template.thumbnailWidth;
       template.thumbnailCanvas.height= template.thumbnailHeight;
@@ -108,10 +116,8 @@ Template.cropUploader.onRendered(function () {
 Template.cropUploader.events({
   'change input.crop-uploader-file': function(e, template) {
     var file = template.$('input[type="file"]')[0].files[0];
-    // console.log(file);
     template.reader.onload = (function(aImg) { return function(e) { aImg.src = e.target.result; }; })(template.thumbnail_img);
     template.reader.readAsDataURL(file);
-    $('.preview').removeClass('hidden');
   },
   'click button.crop-uploader-upload': function(e,template) {
     var file = template.$('input.crop-uploader-file');
@@ -126,7 +132,7 @@ Template.cropUploader.events({
         // e.target.result contains the image data of the original
         //
         var md5hash = MD5(e.target.result);
-        var canvas = document.getElementById('thumbnail_canvas');
+        var canvas = document.getElementById(template.canvasID);
         if(canvas && canvas.toBlob)
         {
           //
@@ -142,6 +148,7 @@ Template.cropUploader.events({
               if (error) {
                 console.error('Error uploading', uploader.xhr.response);
                 alert (error);
+                CropUploader.errorMessage.set(error);
               } else {
                 //
                 // we have uploaded the thumbnail, so now upload original
@@ -150,7 +157,7 @@ Template.cropUploader.events({
                   if (error) {
                     // Log service detailed response
                     console.error('Error uploading', uploader.xhr.response);
-                    alert (error);
+                    CropUploader.errorMessage.set(error);
                   } else {
                     //
                     // add uuid and md5hash to image object
@@ -171,7 +178,8 @@ Template.cropUploader.events({
                     //
                     CropUploader.insert(image);
                     file.val('');
-                    $('.preview').addClass('hidden');
+                    $('#'+template.canvasID).trigger('uploaded');
+                    CropUploader.errorMessage.set('');
                   }
                 });
               }
