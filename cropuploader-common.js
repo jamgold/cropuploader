@@ -134,3 +134,8 @@ CropUploader = {
 		}
 	}
 };
+
+if(Meteor.isClient)
+{
+	CropUploader.errorMessage = new ReactiveVar('');
+}

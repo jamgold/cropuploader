@@ -4,7 +4,7 @@ Package.describe({
   // Brief, one-line summary of the package.
   summary: 'Use slingshot to upload images to S3 and create thumbnails',
   // URL to the Git repository containing the source code for this package.
-  git: 'https://github.com/jamgold/cropuploader',
+  git: 'https://github.com/jamgold/cropuploader/releases/tag/0.0.3',
   // By default, Meteor will default to using README.md for documentation.
   // To avoid submitting documentation, set this field to null.
   documentation: 'README.md'
@@ -18,6 +18,7 @@ Package.onUse(function(api) {
   // https://github.com/blueimp/JavaScript-Canvas-to-Blob
   api.versionsFrom('METEOR@1.0');
   api.use('standard-app-packages', ['client', 'server']);
+  api.use('reactive-var');
   api.use(['raix:md5@1.0.2','edgee:slingshot@0.6.2']);
   api.imply(['raix:md5','edgee:slingshot']);
 
