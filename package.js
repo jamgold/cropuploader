@@ -1,6 +1,6 @@
 Package.describe({
   name: 'jamgold:cropuploader',
-  version: '0.0.3_1',
+  version: '0.0.3_2',
   // Brief, one-line summary of the package.
   summary: 'Use slingshot to upload images to S3 and create thumbnails',
   // URL to the Git repository containing the source code for this package.
