@@ -121,6 +121,7 @@ Template.cropUploader.events({
   },
   'click button.crop-uploader-upload': function(e,template) {
     var file = template.$('input.crop-uploader-file');
+    CropUploader.errorMessage.set(null);
     if(file.size()>0 && file[0].files.length > 0)
     {
       var uuid = Meteor.uuid();
@@ -159,6 +160,10 @@ Template.cropUploader.events({
                     console.error('Error uploading', uploader.xhr.response);
                     console.error(error);
                     CropUploader.errorMessage.set('Error uploading:'+error.reason);
+                    // we need to delete the derivative
+                    Meteor.call('cropUploaderS3Delete', thumbnailUrl, function(err, res){
+                      if(err) console.err(err);
+                    })
                   } else {
                     //
                     // add uuid and md5hash to image object
