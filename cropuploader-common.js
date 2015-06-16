@@ -2,7 +2,6 @@
 //   allowedFileTypes: ["image/png", "image/jpeg", "image/gif"],
 //   maxSize: 10 * 1024 * 1024 // 10 MB (use null for unlimited)
 // });
-
 CropUploader = {
 	images: new Meteor.Collection('images'),
 	name: 'cropUploader',
@@ -17,13 +16,13 @@ CropUploader = {
 			if (! (derivative instanceof window.File) && ! (derivative instanceof window.Blob))
 				throw new Meteor.Error("The derivative to replace must be File or Blob");
 			// check(derivative, Blob);
-			var image = self.images.findOne(imageId);
+			var image = CropUploader.images.findOne(imageId);
 			if(!image) throw new Meteor.Error(401, "the provided image does not exist");
 			if(image.userId != Meteor.userId()) throw new Meteor.Error(403, "you don't have permission to replace derivative for "+imageid);
 			//
 			// setup slingshot with uuid from parent
 			//
-			var uploader = new Slingshot.Upload(self.name, {uuid: image.uuid });
+			var uploader = new Slingshot.Upload(CropUploader.name, {uuid: image.uuid });
 			var oldfile = name in image['derivatives'] ? image['derivatives'][name] : null;
 			// set name of blob so it will put in the right place
 			derivative.name = 'derivative/'+name+'/';
@@ -37,7 +36,7 @@ CropUploader = {
 				//
 				var set = {}
 				set['derivatives.'+name] = thumbnailUrl;
-				self.images.update(image._id,{$set: set}, function(err,res){
+				CropUploader.images.update(image._id,{$set: set}, function(err,res){
 					if(err) console.error(err);
 					else console.log('uploaded and updated', res);
 				});
@@ -100,6 +99,7 @@ CropUploader = {
 		if(directory.length>0 && directory[directory.length-1]!="/") directory+='/';
 		self.directory = directory;
 		self.name = name;
+		console.log('init', self.directory);
 		if(Meteor.isServer)
 		{
 			var Knox = Npm.require("knox");
