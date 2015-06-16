@@ -1,95 +1,120 @@
 var Future = Npm.require("fibers/future");
 
 Meteor.methods({
-  cropUploaderS3urlBase: function() {
-	return CropUploader.knox.urlBase;
-  },
-  cropUploaderS3contents: function(prefix) {
-	var future = new Future();
+	cropUploaderS3urlBase: function() {
+		//
+		return CropUploader.knox.urlBase;
+	},
+	cropUploaderS3contents: function(prefix) {
+		var future = new Future();
 
-	CropUploader.knox.list({prefix: prefix}, function(error, response) {
-	  if(error)
-	  {
-		console.log(error);
-		throw new Meteor.Error(500, "An error occured getting your files");
-	  }
-	  else 
-	  {
-		response.Contents.forEach(function(image){
-		  image.urlBase = CropUploader.knox.urlBase;
+		CropUploader.knox.list({prefix: prefix}, function(error, response) {
+		  if(error)
+		  {
+			console.log(error);
+			throw new Meteor.Error(500, "An error occured getting your files");
+		  }
+		  else 
+		  {
+			response.Contents.forEach(function(image){
+			  image.urlBase = CropUploader.knox.urlBase;
+			});
+			future.return(response.Contents);
+		  }
 		});
-		future.return(response.Contents);
-	  }
-	});
-	return future.wait();
-  },
-  cropUploaderS3Delete: function(url) {
-  	// console.log(this.userId);
-  	var future = new Future();
-  	var uparts = url.split('//');
-  	var purl = uparts.length > 2 ? uparts[2] : uparts[1]; 
-	var relativeUrl = '/'+purl.split('/').slice(1).join('/');
-	console.log('cropUploaderS3Delete', url, relativeUrl);
-	CropUploader.knox.deleteFile( relativeUrl, function(error, res) {
-		if(error) {
-			console.log('cropUploaderS3Delete', error);
-			future.return(true);
+		return future.wait();
+	},
+	cropUploaderS3Delete: function(url) {
+	  	// console.log(this.userId);
+	  	var future = new Future();
+	  	var uparts = url.split('//');
+	  	var purl = uparts.length > 2 ? uparts[2] : uparts[1]; 
+		var relativeUrl = '/'+purl.split('/').slice(1).join('/');
+		console.log('cropUploaderS3Delete', url, relativeUrl);
+		CropUploader.knox.deleteFile( relativeUrl, function(error, res) {
+			if(error) {
+				console.log('cropUploaderS3Delete', error);
+				future.return(true);
+			}
+			else future.return(true);
+		});
+		return future.wait()
+	},
+	cropUploaderConsolidate: function() {
+		//
+		// get all images from this directory
+		//
+		var res = Meteor.call('cropUploaderS3contents',CropUploader.directory);
+		console.log('cropUploaderConsolidate', CropUploader.directory, res);
+		var ret = [];
+		if(res)
+		{
+			res.forEach(function(image){
+				//
+				// skip directories (/ at the end)
+				//
+				if( !image.Key.match(/\/$/) )
+				{
+					ret.push(image.Key);
+					// slingshot/derivative/thumbnail/cb276bcc-3ee3-4cd8-a03b-d4965adfca71.1429836526914.png
+					var url = 'https://'+image.urlBase+'/'+image.Key;
+					var pp = image.Key.split('/');
+					// get the uuid of the image
+					var uuid = pp.pop().split('.')[0];
+					//
+					// check if this is the original
+					//
+					if( !image.Key.match('derivative/') )
+					{
+						var img = CropUploader.images.findOne({url: url});
+						if(!img)
+						{
+							console.log(url+' does not exist');
+							CropUploader.images.insert({
+								url: url,
+								uuid: uuid,
+								relativeUrl: image.Key,
+								urlBase: image.urlBase,
+							});
+						}
+						else
+						{
+							if(img.relativeUrl == undefined)
+							{
+								CropUploader.images.update(img._id,{$set:{
+									relativeUrl: image.Key,
+									urlBase: image.urlBase,
+								}});
+							}
+						}
+					}
+					else
+					{
+						//
+						// find the image record for this uuid
+						//
+						var img = CropUploader.images.findOne({uuid: uuid});
+						if(img)
+						{
+							var type = pp.pop();
+							// console.log(type, img.derivatives);
+							var set = {};set['derivatives.'+type] = url;
+							CropUploader.images.update(img._id,{$set: set});
+						}
+						else
+						{
+							//
+							// we have a derivative without image, delete
+							//
+							console.log(uuid+' not adding '+image.Key);
+							Meteor.call('cropUploaderS3Delete', url);
+						}
+					}
+				}
+			});
 		}
-		else future.return(true);
-	});
-	return future.wait()
-  },
-  cropUploaderConsolidate: function() {
-  	  var res = Meteor.call('cropUploaderS3contents',CropUploader.directory);
-  	  if(res)
-  	  {
-  		res.forEach(function(image){
-  		  if( !image.Key.match(/\/$/) )
-  		  {
-  			var url = 'https://'+image.urlBase+'/'+image.Key;
-  			if( !image.Key.match('derivative/') )
-  			{
-  			  var img = CropUploader.images.findOne({url: url});
-  			  if(!img)
-  			  {
-  				console.log(url+' does not exist');
-  				CropUploader.images.insert({
-  				  url: url,
-  				  relativeUrl: image.Key,
-  				  urlBase: image.urlBase,
-  				});
-  			  }
-  			  else
-  			  {
-  				if(img.relativeUrl == undefined)
-  				{
-  				  CropUploader.images.update(img._id,{$set:{
-  					relativeUrl: image.Key,
-  					urlBase: image.urlBase,
-  				  }});
-  				}
-  			  }
-  			} else {
-  				// slingshot/derivative/thumbnail/cb276bcc-3ee3-4cd8-a03b-d4965adfca71.1429836526914.png
-  				var pp = image.Key.split('/');
-  				var uuid = pp.pop().split('.')[0];
-  				var img = CropUploader.images.findOne({uuid: uuid});
-  				if(img)
-  				{
-  					var type = pp.pop();
-  					// console.log(type, img.derivatives);
-  					var set = {};set['derivatives.'+type] = url;
-  					CropUploader.images.update(img._id,{$set: set});
-  				}
-  				else
-  				{
-  					console.log(uuid+' not adding '+image.Key);
-  				}
-  			}
-  		  }
-  		});
-  	  }
-  }
+		return ret;
+	}
 });
 
 Meteor.publish('cropUploaderImages', function(query) {
