@@ -1,6 +1,6 @@
 Package.describe({
   name: 'jamgold:cropuploader',
-  version: '0.0.3_2',
+  version: '0.0.3_3',
   // Brief, one-line summary of the package.
   summary: 'Use slingshot to upload images to S3 and create thumbnails',
   // URL to the Git repository containing the source code for this package.
@@ -16,17 +16,18 @@ Npm.depends({
 
 Package.onUse(function(api) {
   // https://github.com/blueimp/JavaScript-Canvas-to-Blob
+  var cas = ['client', 'server'];
   api.versionsFrom('METEOR@1.0');
-  api.use('standard-app-packages', ['client', 'server']);
+  api.use('standard-app-packages', cas);
   api.use('reactive-var');
-  api.use(['raix:md5@1.0.2','edgee:slingshot@0.6.2']);
+  api.use(['raix:md5@1.0.2','edgee:slingshot@0.6.2'], cas , {weak: true});
   api.imply(['raix:md5','edgee:slingshot']);
 
   // Npm.require('knox');
   Npm.require('fibers/future');
 
   api.export('CropUploader');
-  api.addFiles('cropuploader-common.js', ['client','server']);
+  api.addFiles('cropuploader-common.js', cas);
   api.addFiles('cropuploader-server.js','server');
   api.addFiles(['cropper.min.js','cropper.min.css','canvas-to-blob.js','cropuploader.css','cropuploader.html','cropuploader-client.js'],'client');
 });
