@@ -1,0 +1,6 @@
+{
+    "S3Bucket": "Your Bucket Name",
+    "awsAccessKeyId": "Your AWS ID",
+    "awsSecretKey": "Your Secret Key",
+    "region": "us-west-2"   
+}
