@@ -99,7 +99,7 @@ CropUploader = {
 		if(directory.length>0 && directory[directory.length-1]!="/") directory+='/';
 		self.directory = directory;
 		self.name = name;
-		console.log('init', self.directory);
+		// console.log('init', self.directory);
 		if(Meteor.isServer)
 		{
 			var Knox = Npm.require("knox");

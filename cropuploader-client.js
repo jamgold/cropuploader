@@ -184,7 +184,8 @@ Template.cropUploader.events({
                     //
                     CropUploader.insert(image);
                     file.val('');
-                    $('#'+template.canvasID).trigger('uploaded');
+                    $('#'+template.canvasID).trigger('uploaded', image);
+                    // document.getElementById(template.canvasID).dispatchEvent(new CustomEvent("uploaded", image));
                     CropUploader.errorMessage.set('');
                   }
                 });

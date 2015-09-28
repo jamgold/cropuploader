@@ -139,7 +139,7 @@ CropUploader.images.allow({
 		//
 		// { '$set': { 'derivatives.thumbnail': 'https://buzzledom-slingshot.s3-us-west-1.amazonaws.com/slingshot/derivative/thumbnail3f2aae7d-711f-48d1-87fe-b58611014de0.1429835432477.png' } }
 		//
-		var allowed = doc.userId == userId;
+		var allowed = (doc.userId == userId || Roles.userIsInRole(userId, 'admin'));
 		var deleteUrl = null;
 		if( allowed && '$set' in modifier )
 		{
@@ -164,7 +164,7 @@ CropUploader.images.allow({
 	remove: function(userId, doc) {
 		var future = new Future();
 		var files = [ doc.relativeUrl ];
-		if(doc.userId != userId) return false;
+		if(doc.userId != userId && !Roles.userIsInRole(userId, 'admin')) return false;
 		//
 		// build array of derivative relativeUrl
 		//
