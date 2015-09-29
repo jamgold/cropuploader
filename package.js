@@ -19,7 +19,7 @@ Package.onUse(function(api) {
   var cas = ['client', 'server'];
   api.versionsFrom('METEOR@1.0');
   api.use('standard-app-packages', cas);
-  api.use(['reactive-var','alanning:roles']);
+  api.use(['reactive-var','alanning:roles@1.2.9']);
   api.use(['raix:md5@1.0.2','edgee:slingshot@0.6.2'], cas , {weak: true});
   api.imply(['raix:md5','edgee:slingshot','alanning:roles']);
 
