@@ -152,6 +152,9 @@ if(Meteor.isServer)
 {
 	Slingshot.createDirective(MySlingShotName, Slingshot.S3Storage, {
 	  bucket: Meteor.settings.S3Bucket,
+	  region: Meteor.settings.region,
+	  AWSAccessKeyId: Meteor.settings.awsAccessKeyId,
+      AWSSecretAccessKey: Meteor.settings.awsSecretKey,
 	  acl: "public-read",
 	  authorize: function () {
 		// Deny uploads if user is not logged in.
