@@ -114,6 +114,20 @@ Meteor.methods({
 			});
 		}
 		return ret;
+	},
+	cropUploaderUrl: function(url) {
+		// http://www.gettyimages.ca/gi-resources/images/Homepage/Hero/UK/CMS_Creative_164657191_Kingfisher.jpg
+		// http://stackoverflow.com/questions/17124053/node-js-get-image-from-web-and-encode-with-base64
+		// request.get('http://tinypng.org/images/example-shrunk-8cadd4c7.png', function (error, response, body) {
+		//     if (!error && response.statusCode == 200) {
+		//         data = "data:" + response.headers["content-type"] + ";base64," + new Buffer(body).toString('base64');
+		//         console.log(data);
+		//     }
+		// });
+		this.unblock();
+		var response = HTTP.call('GET', url,{npmRequestOptions: { encoding: null }});
+		var data = "data:" + response.headers["content-type"] + ";base64," + new Buffer(response.content).toString('base64');
+		return data;
 	}
 });
 

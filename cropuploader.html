@@ -1,6 +1,31 @@
 <template name="cropUploader">
+	{{>UI.dynamic template=cropUploaderTemplate}}
+</template>
+
+<template name="cropUploaderPlain">
 	{{#if currentUser}}
-	<input type="file" class="crop-uploader-file"> <button class="crop-uploader-upload">Upload</button>
+		<input type="file" class="crop-uploader-file">
+		{{#if allowURL}}<input type="url" class="crop-uploader-url" placeholder="Enter URL to image">{{/if}}
+		{{#unless hideUpload}}
+		<button class="crop-uploader-upload">Upload</button>
+		{{else}}
+		<button class="crop-uploader-upload hidden">Upload</button>
+		{{/unless}}
+	{{/if}}
+	<img id="{{thumbnailID}}" class="hidden">
+</template>
+
+<template name="cropUploaderBootstrap">
+	{{#if currentUser}}
+	<form class="form-inline">
+		<span class="btn btn-file btn-success">Select Image to Upload<input type="file" class="crop-uploader-file"></span>
+		{{#if allowURL}} OR <input type="url" class="form-field crop-uploader-url" placeholder="Enter URL to image">{{/if}}
+		{{#unless hideUpload}}
+		<button class="btn btn-danger crop-uploader-upload">Upload</button>
+		{{else}}
+		<button class="btn btn-danger crop-uploader-upload hidden">Upload</button>
+		{{/unless}}
+	</form>
 	{{/if}}
 	<img id="{{thumbnailID}}" class="hidden">
 </template>
@@ -25,6 +50,8 @@
 </template>
 
 <template name="cropUploaderCropper">
-	<div class="image-container"><img imgsrc="{{url}}"></div>
+	<div class="image-container">
+		<img id="crop-image" src="{{url}}">
+	</div>
 	<div class="img-preview"></div>
 </template>
