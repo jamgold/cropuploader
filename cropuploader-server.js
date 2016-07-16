@@ -176,36 +176,82 @@ CropUploader.images.allow({
 		return allowed;
 	},
 	remove: function(userId, doc) {
-		var future = new Future();
-		var files = [ doc.relativeUrl ];
 		if(doc.userId != userId && !Roles.userIsInRole(userId, 'admin')) return false;
-		//
-		// build array of derivative relativeUrl
-		//
-		if(doc.derivatives)
-		  for(var d in doc.derivatives) {
-			// add short relativeUrl
-			var uparts = doc.derivatives[d].split('//');
-			var purl = uparts.length > 2 ? uparts[2] : uparts[1]; 
-			var relativeUrl = '/'+purl.split('/').slice(1).join('/');
-			files.push( relativeUrl );
-		  }
+		else return true;
+		// var future = new Future();
+		// var files = [ doc.relativeUrl ];
+		// //
+		// // build array of derivative relativeUrl
+		// //
+		// if(doc.derivatives)
+		// {
+		// 	for(var d in doc.derivatives) {
+		// 		// add short relativeUrl
+		// 		var uparts = doc.derivatives[d].split('//');
+		// 		var purl = uparts.length > 2 ? uparts[2] : uparts[1]; 
+		// 		// var relativeUrl = '/'+purl.split('/').slice(1).join('/');
+		// 		// https://github.com/Automattic/knox/issues/121
+		// 		var relativeUrl = purl.split('/').slice(1).join('/');
+		// 		files.push( relativeUrl );
+		// 	}
+		// }
+		// var deleteMultiple = CropUploader.knox.deleteMultiple( files , function(error, result){
+		// 	// console.log('CropUploader.images.remove result', result);
+		// 	if(error)
+		// 	{
+		// 		console.log('CropUploader.images.remove', error);
+		// 		// throw new Meteor.Error(500, "An error occured deleting your file");
+		// 		future.return(false);
+		// 	}
+		// 	else 
+		// 	{
+		// 		console.log('CropUploader.images.remove', files);
+		// 		future.return(true);
+		// 	}
+		// });
+		// // console.log('deleteMultiple', deleteMultiple);
+		// return future.wait();
+	}
+});
 
-		CropUploader.knox.deleteMultiple( files , function(error, res){
-		  if(error)
-		  {
-			console.log(error);
+CropUploader.images.after.remove(function(userId, image) {
+	if(!image) return true;
+	console.log('CropUploader.images.after.remove '+ image._id);
+	var future = new Future();
+	var files = [];
+	if(image.relativeUrl) files.push( image.relativeUrl)
+	//
+	// build array of derivative relativeUrl
+	//
+	if(image.derivatives)
+	{
+		for(var d in image.derivatives) {
+			// add short relativeUrl
+			var uparts = image.derivatives[d].split('//');
+			var purl = uparts.length > 2 ? uparts[2] : uparts[1]; 
+			// var relativeUrl = '/'+purl.split('/').slice(1).join('/');
+			// https://github.com/Automattic/knox/issues/121
+			var relativeUrl = purl.split('/').slice(1).join('/');
+			files.push( relativeUrl );
+		}
+	}
+
+	var deleteMultiple = CropUploader.knox.deleteMultiple( files , function(error, result){
+		// console.log('CropUploader.images.remove result', result);
+		if(error)
+		{
+			console.log(' - error ', error);
 			// throw new Meteor.Error(500, "An error occured deleting your file");
 			future.return(false);
-		  }
-		  else 
-		  {
+		}
+		else 
+		{
+			console.log(' - files', files);
 			future.return(true);
-		  }
-		});
-
-		return future.wait();
-	}
+		}
+	});
+	// console.log(' - deleteMultiple', files);
+	return future.wait();
 });
 
 Meteor.startup(function () {

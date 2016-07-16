@@ -18,11 +18,11 @@ Package.onUse(function(api) {
   // https://github.com/blueimp/JavaScript-Canvas-to-Blob
   var cas = ['client', 'server'];
   api.versionsFrom('METEOR@1.0');
-  api.use('standard-app-packages', cas);
-  api.use(['reactive-var','alanning:roles@1.2.9']);
+  // api.use('standard-app-packages', cas);
+  api.use(['tracker','session','templating','handlebars'], 'client');
+  api.use(['reactive-var','alanning:roles@1.2.9','matb33:collection-hooks']);
   api.use(['raix:md5@1.0.2','edgee:slingshot@0.6.2'], cas , {weak: true});
   api.imply(['raix:md5','edgee:slingshot','alanning:roles']);
-
   // Npm.require('knox');
   Npm.require('fibers/future');
 

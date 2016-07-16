@@ -423,6 +423,7 @@ Template.cropUploaderCropper.onCreated(function () {
 	template.uuid = template.original.url.split('/').pop().split('.').shift();
 	template.thumbnailWidth = template.data.thumbnailWidth || undefined;
 	template.thumbnailHeight = template.data.thumbnailHeight || undefined;
+	template.aspectRatio = template.data.aspectRatio || 1.0;
 
 	if(template.thumbnailHeight == undefined && template.thumbnailWidth == undefined)
 	{
@@ -431,7 +432,7 @@ Template.cropUploaderCropper.onCreated(function () {
 	}
 
 	var options = {
-		aspectRatio: 1.0,
+		aspectRatio: template.aspectRatio,
 		resizable: true,
 		rotatable: true,
 		checkImageOrigin: navigator.userAgent.match(/9.*Safari/)!==null,
@@ -447,7 +448,8 @@ Template.cropUploaderCropper.onCreated(function () {
 		// },
 		built: function() {
 			// this is image
-			if(Meteor.isDevelopment) console.debug('cropper built' );
+			if(Meteor.isDevelopment)
+				console.debug(template.view.name+'.onCreated', options);
 			template.$('button.hidden').removeClass('hidden');
 			//
 			// this will distort getDataURL
