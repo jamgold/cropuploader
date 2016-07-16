@@ -7,18 +7,20 @@ CropUploader = {
 	name: 'cropUploader',
 	urlBase: null,
 	derivative: {
-		replace:function(imageId, name, derivative) {
+		replace:function(imageid, name, derivative) {
 			var self = this;
 			// console.log( derivative );
-			check(imageId, String);
+			check(imageid, String);
 			check(name, String);
+			var userId = Meteor.userId();
 			// derivative needs to be File or Blob
 			if (! (derivative instanceof window.File) && ! (derivative instanceof window.Blob))
 				throw new Meteor.Error("The derivative to replace must be File or Blob");
 			// check(derivative, Blob);
-			var image = CropUploader.images.findOne(imageId);
+			var image = CropUploader.images.findOne(imageid);
 			if(!image) throw new Meteor.Error(401, "the provided image does not exist");
-			if(image.userId != Meteor.userId()) throw new Meteor.Error(403, "you don't have permission to replace derivative for "+imageid);
+			if(!Roles.userIsInRole(userId, 'admin') && image.userId != userId)
+				throw new Meteor.Error(403, "you don't have permission to replace derivative for "+imageid);
 			//
 			// setup slingshot with uuid from parent
 			//
