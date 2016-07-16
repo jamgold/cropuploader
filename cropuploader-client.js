@@ -91,11 +91,13 @@ Template.cropUploader.onRendered(function () {
 		var cc = {
 			x: 0,
 			y: 0,
-			width: template.thumbnail_img.width,
-			height: template.thumbnail_img.height
-			// width: template.thumbnailCanvas.width,
-			// height: template.thumbnailCanvas.height
+			// width: template.thumbnail_img.width,
+			// height: template.thumbnail_img.height
+			width: template.thumbnailCanvas.width,
+			height: template.thumbnailCanvas.height
 		};
+		// console.log('thumbnailping', cc);
+
 		template.originalCanvas.width = template.thumbnail_img.width;
 		template.originalCanvas.height = template.thumbnail_img.height;
 		//
@@ -124,6 +126,7 @@ Template.cropUploader.onRendered(function () {
 		var thumbnail_ctx = template.thumbnailCanvas.getContext("2d");
 		//
 		// resize/crop the original for the thumbnail
+		// cc.width/height needs to be adjusted to the ascpect ratio of thumbnailCanvas
 		//
 		thumbnail_ctx.drawImage(
 			template.thumbnail_img,
