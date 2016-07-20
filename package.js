@@ -1,10 +1,10 @@
 Package.describe({
   name: 'jamgold:cropuploader',
-  version: '0.0.4',
+  version: '0.0.4_2',
   // Brief, one-line summary of the package.
   summary: 'Use slingshot to upload images to S3 and create thumbnails',
   // URL to the Git repository containing the source code for this package.
-  git: 'https://github.com/jamgold/cropuploader/releases/tag/0.0.4',
+  git: 'https://github.com/jamgold/cropuploader/releases/tag/0.0.4_2',
   // By default, Meteor will default to using README.md for documentation.
   // To avoid submitting documentation, set this field to null.
   documentation: 'README.md'
@@ -20,7 +20,7 @@ Package.onUse(function(api) {
   api.versionsFrom('METEOR@1.0');
   // api.use('standard-app-packages', cas);
   api.use(['tracker','session','templating','handlebars'], 'client');
-  api.use(['reactive-var','alanning:roles@1.2.9','matb33:collection-hooks']);
+  api.use(['reactive-var','alanning:roles@1.2.9','matb33:collection-hooks@0.8.1']);
   api.use(['raix:md5@1.0.2','edgee:slingshot@0.6.2'], cas , {weak: true});
   api.imply(['raix:md5','edgee:slingshot','alanning:roles']);
   // Npm.require('knox');
