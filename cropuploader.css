@@ -11,3 +11,18 @@ h6.id {
 .hidden {
 	display: none;
 }
+#image-container {
+	position: relative;
+}
+#crop-image-loading {
+	position: absolute;
+	z-index: 1000;
+	top: 10px;
+	left: 30%;
+	height: 100%;
+}
+@media screen and (max-width: 414px) {
+	#crop-image-loading {
+		left: 15%;
+	}
+}

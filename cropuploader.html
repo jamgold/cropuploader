@@ -50,8 +50,9 @@
 </template>
 
 <template name="cropUploaderCropper">
+	{{#if loading}} <img id="crop-image-loading" src="{{loading}}">{{/if}}
 	<div class="image-container">
-		<img id="crop-image" src="{{url}}">
+		<img id="crop-image" width=100% src="{{url}}">
 	</div>
 	<div class="img-preview"></div>
 </template>

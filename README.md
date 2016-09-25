@@ -126,7 +126,7 @@ Here is a typical document from the CropUploader.images collection
 
 ## The Interactive Cropper
 
-The second template provided is called cropUploaderCropper and it requires the collection id of the image to be cropped and the url to the image. It again takes a width and height to determine the size of the resulting image. This template will render the awesome [cropper](https://github.com/fengyuanchen/cropper)
+The second template provided is called cropUploaderCropper and it requires the collection id of the image to be cropped and the url to the image. It again takes a width and height to determine the size of the resulting image. This template will render the awesome [cropper](https://github.com/fengyuanchen/cropper) v2.3.4
 
 ```
 <template name="cropper">

@@ -1,8 +1,8 @@
 Package.describe({
   name: 'jamgold:cropuploader',
-  version: '0.0.4_2',
+  version: '0.0.4_4',
   // Brief, one-line summary of the package.
-  summary: 'Use slingshot to upload images to S3 and create thumbnails',
+  summary: 'Use slingshot to upload images to S3 and create thumbnails; provide fengyuanchen cropper v2.3.4',
   // URL to the Git repository containing the source code for this package.
   git: 'https://github.com/jamgold/cropuploader/releases/tag/0.0.4_2',
   // By default, Meteor will default to using README.md for documentation.
@@ -20,7 +20,7 @@ Package.onUse(function(api) {
   api.versionsFrom('METEOR@1.0');
   // api.use('standard-app-packages', cas);
   api.use(['tracker','session','templating','handlebars'], 'client');
-  api.use(['reactive-var','alanning:roles@1.2.9','matb33:collection-hooks@0.8.1']);
+  api.use(['reactive-var','alanning:roles@1.2.9','matb33:collection-hooks@0.8.0']);
   api.use(['raix:md5@1.0.2','edgee:slingshot@0.6.2'], cas , {weak: true});
   api.imply(['raix:md5','edgee:slingshot','alanning:roles']);
   // Npm.require('knox');
@@ -29,7 +29,7 @@ Package.onUse(function(api) {
   api.export('CropUploader');
   api.addFiles('cropuploader-common.js', cas);
   api.addFiles('cropuploader-server.js','server');
-  api.addFiles(['cropper.min.js','cropper.min.css','canvas-to-blob.js','cropuploader.css','cropuploader.html','cropuploader-client.js'],'client');
+  api.addFiles(['exif.js', 'cropper.min.js','cropper.min.css','canvas-to-blob.js','cropuploader.css','cropuploader.html','cropuploader-client.js'],'client');
 });
 
 Package.onTest(function(api) {
