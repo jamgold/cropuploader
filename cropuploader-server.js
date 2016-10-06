@@ -124,10 +124,16 @@ Meteor.methods({
 		//         console.log(data);
 		//     }
 		// });
-		this.unblock();
-		var response = HTTP.call('GET', url,{npmRequestOptions: { encoding: null }});
-		var data = "data:" + response.headers["content-type"] + ";base64," + new Buffer(response.content).toString('base64');
-		return data;
+		try {
+		    var response = HTTP.call('GET', url,{npmRequestOptions: { encoding: null }});
+		    var content_type = response.headers['content-type'];
+		    if(content_type.match(/^image/))
+		        return "data:" + content_type + ";base64," + new Buffer(response.content).toString('base64');
+		    else
+		        throw new Meteor.Error(500,'wrong content type', 'the url '+url+' returned '+content_type);
+		} catch (e) {
+		    throw new Meteor.Error(e.statusCode, 'url wrong', 'the '+url+' is wrong');
+		}
 	}
 });
 
@@ -143,6 +149,8 @@ CropUploader.images.allow({
 		image.created = new Date();
 		image.urlBase = CropUploader.knox.urlBase;
 		image.relativeUrl = image.url.split('//')[1].split('/').slice(1).join('/');
+		if(image.dropboxImage) delete image.dropboxImage;
+		if(image.template) delete image.template;
 		// if('insert' in CropUploader._hooks && typeof CropUploader._hooks.insert == 'function')
 		// 	image = CropUploader._hooks.insert(image);
 		return userId && image;

@@ -6,6 +6,10 @@ CropUploader = {
 	images: new Meteor.Collection('images'),
 	name: 'cropUploader',
 	urlBase: null,
+	uploader: null,
+	uploading: new ReactiveVar(false),
+	uploadingMessage: new ReactiveVar(''),
+	instance: {},
 	derivative: {
 		replace:function(imageid, name, derivative) {
 			var self = this;
@@ -24,13 +28,15 @@ CropUploader = {
 			//
 			// setup slingshot with uuid from parent
 			//
-			var uploader = new Slingshot.Upload(CropUploader.name, {uuid: image.uuid });
+			CropUploader.uploader = new Slingshot.Upload(CropUploader.name, {uuid: image.uuid });
 			var oldfile = name in image['derivatives'] ? image['derivatives'][name] : null;
 			// set name of blob so it will put in the right place
 			derivative.name = 'derivative/'+name+'/';
-			uploader.send(derivative, function (error, thumbnailUrl) {
+			CropUploader.uploadingMessage.set('New '+name);
+			CropUploader.uploading.set(true);
+			CropUploader.uploader.send(derivative, function (error, thumbnailUrl) {
 			  if (error) {
-				console.error('Error uploading', uploader.xhr.response);
+				console.error('Error uploading', CropUploader.uploader.xhr.response);
 				alert (error);
 			  } else {
 				//
@@ -53,6 +59,7 @@ CropUploader = {
 					});
 				}
 			  }
+			  CropUploader.uploading.set(false);
 			});
 		},
 	},
@@ -65,11 +72,36 @@ CropUploader = {
 		var self = this;
 		if('insert' in self._hooks && typeof self._hooks.insert == 'function')
 			image = self._hooks.insert(image);
-		if(image)
+		if(image) {
 			CropUploader.images.insert( image );
+		}
 	},
 	crop: {
 		template: null,
+		options: {
+			aspectRatio: 1.0,
+			resizable: true,
+			rotatable: true,
+			scalable: true,
+			dragMode: 'move',
+			checkOrientation: true,
+			// minCanvasHeight: 500,
+			// checkImageOrigin: navigator.userAgent.match(/9.*Safari/)!==null,
+			preview: ".img-preview",
+			data: {
+				x: 10,
+				y: 10,
+				// width: template.thumbnailWidth,
+				// height: template.thumbnailHeight
+			},
+			built: function() {
+				// this is image
+				if(Meteor.isDevelopment)
+					console.debug(CropUploader.crop.template.view.name+'.onCreated built', CropUploader.crop.options);
+				CropUploader.crop.template.$('button.hidden').removeClass('hidden');
+				CropUploader.crop.template.$('#crop-image-loading').fadeOut();
+			}
+		},
 		save: function(type) {
 			var self = this;
 			var imageid = self.template.imageid;
@@ -89,7 +121,12 @@ CropUploader = {
 		rotate: function() {
 			var self = this;
 			self.template.cropimage.cropper('rotate',90);
-		}
+		},
+		zoom: function(v) {
+			v = v || 0.1;
+			var self = this;
+			self.template.cropimage.cropper('zoom',v);
+		},
 	},
 	init: function(name, directory, consolidate) {
 		var self = this;
@@ -140,4 +177,14 @@ CropUploader = {
 if(Meteor.isClient)
 {
 	CropUploader.errorMessage = new ReactiveVar('');
+	Template.registerHelper('CropUploader', function(){
+		return {
+			uploading: function() {
+				return CropUploader.uploading.get();
+			},
+			message: function() {
+				return CropUploader.uploadingMessage.get();
+			},
+		};
+	});
 }

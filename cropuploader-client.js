@@ -7,13 +7,15 @@ Template.cropUploader.onCreated(function(){
 			template.addons[key] = val;
 		}
 	});
-	if(Meteor.isDevelopment) console.debug(template.view.name+'.created', template.addons);
-
+	if(Meteor.isDevelopment) console.debug(template.view.name+'.created addons: ', template.addons, template.data);
 	template.allowURL = template.data.allowURL === true;
-
 	template.reader = new FileReader();
+	template.imagePresent = new ReactiveVar(false);
+	template.thumbnailID = template.data.thumbnailID || undefined;
+	if(template.thumbnailID == undefined) template.thumbnailID = 'thumbnail_img';
+	CropUploader.instance[template.thumbnailID] = template;
 });
-Template.cropUploader.onRendered(function () {
+Template.cropUploader.onRendered(function() {
 	var template = this;
 	template.orientation = 0;
 	template.make = '';
@@ -21,19 +23,16 @@ Template.cropUploader.onRendered(function () {
 	template.thumbnailWidth = template.data.thumbnailWidth || undefined;
 	template.thumbnailHeight = template.data.thumbnailHeight || undefined;
 	template.canvasID = template.data.canvasID || undefined;
-	template.thumbnailID = template.data.thumbnailID || undefined;
-
+	// template.thumbnailID = template.data.thumbnailID || undefined;
 	if(template.canvasID == undefined) template.canvasID = 'thumbnail_canvas';
-	if(template.thumbnailID == undefined) template.thumbnailID = 'thumbnail_img';
+	// if(template.thumbnailID == undefined) template.thumbnailID = 'thumbnail_img';
 
-	if(template.thumbnailHeight == undefined && template.thumbnailWidth == undefined)
-	{
+	if(template.thumbnailHeight == undefined)
 		template.thumbnailHeight = 100;
+	if(template.thumbnailWidth == undefined)
 		template.thumbnailWidth = 100;
-	}
-	// console.info(template.view.name+'.rendered',this);
 
-	template.preview = document.getElementById('preview');
+	template.preview = template.data.previewID ? document.getElementById(template.data.previewID) : document.getElementById('preview');
 
 	if(!template.preview)
 	{
@@ -60,17 +59,18 @@ Template.cropUploader.onRendered(function () {
 	{
 		template.thumbnailCanvas = document.createElement('canvas');
 		template.thumbnailCanvas.id = template.canvasID;
-		template.thumbnailCanvas.width = template.thumbnailWidth;
-		template.thumbnailCanvas.height = template.thumbnailHeight;
+		template.thumbnailCanvas.width = template.data.previewWidth ? template.data.previewWidth : template.thumbnailWidth;
+		template.thumbnailCanvas.height = template.data.previewHeight ? template.data.previewHeight : template.thumbnailHeight;
 		template.thumbnailCanvas.classList.add('hidden');
 		template.thumbnailCanvas.classList.add('preview');
 		template.preview.appendChild(template.thumbnailCanvas);
+		if(Meteor.isDevelopment) console.debug('created canvas '+template.canvasID);
 	}
-	else
-	{
-		template.thumbnailCanvas.width = template.thumbnailWidth;
-		template.thumbnailCanvas.height = template.thumbnailHeight;
-	}
+	// else
+	// {
+	// 	template.thumbnailCanvas.width = template.data.previewWidth ? template.data.previewWidth : template.thumbnailWidth;
+	// 	template.thumbnailCanvas.height = template.data.previewHeight ? template.data.previewHeight : template.thumbnailHeight;
+	// }
 	//
 	// everything will get loaded into the originalCanvas
 	//
@@ -83,19 +83,17 @@ Template.cropUploader.onRendered(function () {
 		template.originalCanvas.classList.add('hidden');
 		template.preview.appendChild(template.originalCanvas);
 		// $('.preview-canvas')[0].appendChild(template.originalCanvas);
-		if(Meteor.isDevelopment) console.debug('created '+template.canvasID+'_original');
+		if(Meteor.isDevelopment) console.debug('created canvas '+template.canvasID+'_original');
 	}
 	//
 	// thumbnail_img.onload will handle the thumbnailification and orientation
 	//
-	this.thumbnail_img.onload = function cropUploaderImageOnload(e) {
+	template.thumbnail_img.onload = function cropUploaderImageOnload(e) {
 		var thumbnail_dataUrl = template.thumbnail_img.src;
 		// console.log(`thumbnail_img.onload: ${template.make} ${template.orientation}`);
 		var cc = {
 			x: 0,
 			y: 0,
-			// width: template.thumbnail_img.width,
-			// height: template.thumbnail_img.height
 			width: template.thumbnailCanvas.width,
 			height: template.thumbnailCanvas.height
 		};
@@ -103,10 +101,10 @@ Template.cropUploader.onRendered(function () {
 		template.originalCanvas.width = template.thumbnail_img.width;
 		template.originalCanvas.height = template.thumbnail_img.height;
 
+		template.original_ctx = template.originalCanvas.getContext('2d');
 		if ( template.orientation ) {
-			var ctx = template.originalCanvas.getContext('2d');
 			var orientation = template.orientation;
-			ctx.save();
+			template.original_ctx.save();
 			var width  = template.originalCanvas.width;  var styleWidth  = template.originalCanvas.style.width;
 			var height = template.originalCanvas.height; var styleHeight = template.originalCanvas.style.height;
 
@@ -115,55 +113,64 @@ Template.cropUploader.onRendered(function () {
 		    template.originalCanvas.height = width;  template.originalCanvas.style.height = styleWidth;
 		  }
 		  switch (orientation) {
-			  case 2: ctx.translate(width, 0);     ctx.scale(-1,1); break;
-			  case 3: ctx.translate(width,height); ctx.rotate(Math.PI); break;
-			  case 4: ctx.translate(0,height);     ctx.scale(1,-1); break;
-			  case 5: ctx.rotate(0.5 * Math.PI);   ctx.scale(1,-1); break;
-			  case 6: ctx.rotate(0.5 * Math.PI);   ctx.translate(0,-height); break;
-			  case 7: ctx.rotate(0.5 * Math.PI);   ctx.translate(width,-height); ctx.scale(-1,1); break;
-			  case 8: ctx.rotate(-0.5 * Math.PI);  ctx.translate(-width,0); break;
+			  case 2: template.original_ctx.translate(width, 0);     template.original_ctx.scale(-1,1); break;
+			  case 3: template.original_ctx.translate(width,height); template.original_ctx.rotate(Math.PI); break;
+			  case 4: template.original_ctx.translate(0,height);     template.original_ctx.scale(1,-1); break;
+			  case 5: template.original_ctx.rotate(0.5 * Math.PI);   template.original_ctx.scale(1,-1); break;
+			  case 6: template.original_ctx.rotate(0.5 * Math.PI);   template.original_ctx.translate(0,-height); break;
+			  case 7: template.original_ctx.rotate(0.5 * Math.PI);   template.original_ctx.translate(width,-height); template.original_ctx.scale(-1,1); break;
+			  case 8: template.original_ctx.rotate(-0.5 * Math.PI);  template.original_ctx.translate(-width,0); break;
 		  }
-		  ctx.drawImage(template.thumbnail_img,0,0);
 		}
+		template.original_ctx.drawImage(template.thumbnail_img,0,0);
 		//
 		// check if we want to make it square
 		//
-		if(template.thumbnailWidth == template.thumbnailHeight)
-		{
-			if (cc.height > cc.width) {
-				cc.height = cc.width;
+		var sWidth = template.originalCanvas.width, sHeight = template.originalCanvas.height;
+		//
+		// are we requesting a square image
+		//
+		if(cc.width == cc.height) {
+			//
+			// make source square
+			//
+			if(sWidth>sHeight) sWidth=sHeight;
+			else sHeight = sWidth;
+		} else {
+			//
+			// make source same aspect ratio as cc (422 x 243) vs (2576 x 1932)
+			//
+			if(cc.width>cc.height) {
+				// horizontal
+				var d = cc.width / cc.height;
+				sHeight = sHeight / d;
+			} else {
+				// vertical
+				var d = cc.height / cc.width;
+				sWidth = sWidth / d;
 			}
-			else
-			{
-				cc.width = template.thumbnail_img.height;
-			}
-			template.thumbnailCanvas.width = template.thumbnailWidth;
-			template.thumbnailCanvas.height= template.thumbnailHeight;
-		}
-		else
-		{
-			if(template.thumbnailWidth != undefined)
-				template.thumbnailCanvas.height = template.thumbnailWidth * cc.height/cc.width;
-			else
-				template.thumbnailCanvas.width = template.thumbnailHeight * cc.width/cc.height;
 		}
 		//
 		// get context for thumbnail
 		//
-		var thumbnail_ctx = template.thumbnailCanvas.getContext("2d");
+		template.thumbnail_ctx = template.thumbnailCanvas.getContext("2d");
 		//
 		// resize/crop the adjusted original canvas
 		// cc.width/height needs to be adjusted to the ascpect ratio of thumbnailCanvas
+		// void ctx.drawImage(image, dx, dy);
+		// void ctx.drawImage(image, dx, dy, dWidth, dHeight);
+		// void ctx.drawImage(image, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight);
 		//
-		thumbnail_ctx.drawImage(
+		template.thumbnail_ctx.drawImage(
 			template.originalCanvas,// template.thumbnail_img,
-			// original x/y w/h
-			cc.x, cc.y,
-			cc.width, cc.height,
-			// reduce to canvas x/y w/h
+			// source x/y w/h
 			0,0,
-			template.thumbnailCanvas.width, template.thumbnailCanvas.height
+			sWidth, sHeight,
+			// reduce to canvas x/y w/h
+			cc.x, cc.y,
+			cc.width, cc.height
 		);
+
 		if(true || template.addons['previewShow'])
 		{
 			$('#'+template.thumbnailCanvas.id).trigger('onload');
@@ -171,26 +178,21 @@ Template.cropUploader.onRendered(function () {
 		// thumbnail_ctx = template.originalCanvas.getContext("2d");
 		// thumbnail_ctx.drawImage(template.thumbnail_img,0,0);
 		template.originalCanvas.setAttribute('imagePresent', true);
+		template.imagePresent.set(true);
 	}
 });
 Template.cropUploader.onDestroyed(function() {
 	var template = this;
 	// console.log(template.view.name+'.onDestroyed', template);
+	delete CropUploader.instance[template.thumbnailID];
 	$(template.thumbnailCanvas).remove();
 	$(template.originalCanvas).remove();
 	$(template.thumbnail_img).remove();
 });
 Template.cropUploader.events({
-	'change input.crop-uploader-url': function(e, template) {
-		var url = template.$('input[type="url"]').val();
-		template.$('input[type="file"]').val('');
-		template.md5hash = MD5(url);
-		Meteor.call('cropUploaderUrl',url, function(err,res){
-			if(!err) $('#thumbnail_img').attr('src',res);//.removeClass('hidden');
-			else CropUploader.errorMessage.set('Could not load URL');
-		});
-		// template.thumbnail_img.src = url;
-	},
+	// 'drop input.crop-uploader-file': function(e, template) {
+	// 	console.log(e);
+	// },
 	'change input.crop-uploader-file': function(e, template) {
 		template.$('input[type="url"]').val('');
 		var file = template.$('input[type="file"]')[0].files[0];
@@ -213,8 +215,14 @@ Template.cropUploader.events({
 			template.reader.readAsDataURL(this);
 		});
 	},
+	'click button.crop-uploader-reset': function(e,template) {
+		template.imagePresent.set(false);
+		template.$('#'+template.canvasID).addClass('hidden');
+		template.originalCanvas.setAttribute('imagePresent', false);
+	},
 	'click button.crop-uploader-upload': function(e,template) {
-		var imagePresent = template.originalCanvas.getAttribute('imagePresent');
+		// use the originalCanvas attribute because we do not want reactivity here
+		var imagePresent = template.originalCanvas.getAttribute('imagePresent') == "true";
 		var uuid = Meteor.uuid();
 		
 		e.preventDefault();
@@ -225,7 +233,7 @@ Template.cropUploader.events({
 		//
 		if(imagePresent)
 		{
-			var uploader = new Slingshot.Upload(CropUploader.name, {uuid: uuid });
+			CropUploader.uploader = new Slingshot.Upload(CropUploader.name, {uuid: uuid });
 			var canvas = document.getElementById(template.canvasID);
 			if(canvas && canvas.toBlob)
 			{
@@ -237,12 +245,14 @@ Template.cropUploader.events({
 					// set the name which will get used in the uploader/key function
 					//
 					blob.name = 'derivative/thumbnail/';
-
-					uploader.send(blob, function (error, thumbnailUrl) {
+					CropUploader.uploadingMessage.set('Thumbnail');
+					CropUploader.uploading.set(true);
+					CropUploader.uploader.send(blob, function (error, thumbnailUrl) {
 						if (error) {
-							console.error('Error uploading', uploader.xhr.response);
-							console.error(error);
+							console.error('Error uploading', CropUploader.uploader.xhr.response);
+							// console.error(error);
 							CropUploader.errorMessage.set('Error uploading:'+error.reason);
+							CropUploader.uploading.set(false);
 						} else {
 							//
 							// we have uploaded the thumbnail, so now upload original
@@ -253,7 +263,8 @@ Template.cropUploader.events({
 								var image = {
 									name: blob.name
 								};
-								uploader.send(blob, function(error, originalUrl){
+								CropUploader.uploadingMessage.set('Original');
+								CropUploader.uploader.send(blob, function(error, originalUrl){
 									if(error)
 									{
 										// Log service detailed response
@@ -264,6 +275,7 @@ Template.cropUploader.events({
 										Meteor.call('cropUploaderS3Delete', thumbnailUrl, function(err, res){
 											if(err) console.err(err);
 										});
+										CropUploader.uploading.set(false);
 									}
 									else
 									{
@@ -303,6 +315,9 @@ Template.cropUploader.events({
 										$('#'+template.canvasID).trigger('uploaded', image);
 
 										CropUploader.errorMessage.set('');
+										CropUploader.uploading.set(false);
+										template.imagePresent.set(false);
+										template.originalCanvas.setAttribute('imagePresent', false);
 									}
 								});
 							},'image/png');
@@ -311,100 +326,12 @@ Template.cropUploader.events({
 				}, 'image/png');
 			} else console.log('canvas no blob');
 		} else CropUploader.errorMessage.set('Please select file first');
-		// var file = template.$('input.crop-uploader-file');
-		// if(file.size()>0 && file[0].files.length > 0)
-		// {
-		// 	var image = file[0].files[0];
-		// 	var uploader = new Slingshot.Upload(CropUploader.name, {uuid: uuid });
-
-		// 	//template.reader.onload = function(e) {
-		// 		//
-		// 		// e.target.result contains the image data of the original
-		// 		//
-		// 		// var md5hash = MD5(e.target.result);
-		// 		var canvas = document.getElementById(template.canvasID);
-		// 		if(canvas && canvas.toBlob)
-		// 		{
-		// 			//
-		// 			// first save the blob (thumbnail)
-		// 			//
-		// 			canvas.toBlob(function(blob) {
-		// 				//
-		// 				// set the name which will get used in the uploader/key function
-		// 				//
-		// 				blob.name = 'derivative/thumbnail/';
-
-		// 				uploader.send(blob, function (error, thumbnailUrl) {
-		// 					if (error) {
-		// 						console.error('Error uploading', uploader.xhr.response);
-		// 						console.error(error);
-		// 						CropUploader.errorMessage.set('Error uploading:'+error.reason);
-		// 					} else {
-		// 						//
-		// 						// we have uploaded the thumbnail, so now upload original
-		// 						//
-		// 						uploader.send(image, function (error, originalUrl) {
-		// 							if (error) {
-		// 								// Log service detailed response
-		// 								console.error('Error uploading', uploader.xhr.response);
-		// 								console.error(error);
-		// 								CropUploader.errorMessage.set('Error uploading:'+error.reason);
-		// 								// we need to delete the derivative
-		// 								Meteor.call('cropUploaderS3Delete', thumbnailUrl, function(err, res){
-		// 									if(err) console.err(err);
-		// 								})
-		// 							} else {
-		// 								//
-		// 								// add uuid and md5hash to image object
-		// 								//
-		// 								image.uuid = uuid;
-		// 								image.md5hash = template.md5hash;
-		// 								image.url = originalUrl;
-		// 								//
-		// 								// add our derivatives
-		// 								//
-		// 								image.derivatives = {
-		// 									thumbnail: thumbnailUrl
-		// 								};
-		// 								if(template.addons)
-		// 									image = _.extend(image, template.addons);
-		// 								//
-		// 								// finally add it to the collection
-		// 								//
-		// 								CropUploader.insert(image);
-		// 								file.val('');
-		// 								//
-		// 								// clear the thumbnailCanvas
-		// 								//
-		// 								var thumbnail_ctx = template.thumbnailCanvas.getContext("2d");
-		// 								thumbnail_ctx.clearRect(0, 0, template.thumbnailCanvas.width, template.thumbnailCanvas.height);
-		// 								//
-		// 								// trigger onclear on thumbnailCanvas
-		// 								//
-		// 								$('#'+template.thumbnailCanvas.id).trigger('onclear');
-		// 								//
-		// 								// trigger uploaded so client can act on it
-		// 								//
-		// 								$('#'+template.canvasID).trigger('uploaded', image);
-
-		// 								CropUploader.errorMessage.set('');
-		// 							}
-		// 						});
-		// 					}
-		// 				});
-		// 			}, 'image/png');
-		// 		} else console.log('canvas no blob');
-		// 	// };
-		// 	//
-		// 	// in order to get the MD5 for the image, we need to read it on the client
-		// 	//
-		// 	// template.reader.readAsDataURL(image);
-		// } else CropUploader.errorMessage.set('Please select file first');
 	},
 });
 Template.cropUploader.helpers({
-	allowURL: function() {
+	allowedURL: function() {
 		var instance = Template.instance();
+		// console.log('allowedURL '+instance.allowURL);
 		return instance.allowURL;
 	},
 	hideUpload: function() {
@@ -416,13 +343,96 @@ Template.cropUploader.helpers({
 		var template = 'cropUploaderPlain';
 		var request = this.template || '';
 		switch(request.toLowerCase()) {
+			case 'dropbox':
+				template = 'cropUploaderDropbox';
+				break;
 			case 'bootstrap':
 				template = 'cropUploaderBootstrap';
+				break;
 			break;
 		}
 		return template;
 	}
 });
+Template.cropUploaderURL.onCreated(function(){
+	var template = this;
+	if(Meteor.isDevelopment) console.debug(template.view.name+'.created: ', template.data);
+	template.imagePresent = CropUploader.instance[template.data.thumbnailID].imagePresent;
+})
+Template.cropUploaderURL.events({
+	'change input.crop-uploader-url': function(e, template) {
+		var url = template.$('input[type="url"]').val();
+		var thumbnailID = template.data && template.data.thumbnailID ? template.data.thumbnailID : null;
+		// template.$('input[type="file"]').val('');
+		if(thumbnailID) {
+			template.md5hash = MD5(url);
+			Meteor.call('cropUploaderUrl',url, function(err,res){
+				if(!err) {
+					CropUploader.instance[thumbnailID].thumbnail_img.src = res;
+				} else {
+					CropUploader.errorMessage.set(err.details);
+				}
+			});
+		}
+	},
+});
+Template.cropUploaderURL.helpers({
+	imagePresent: function(){
+		var template = Template.instance();
+		// console.log(template.view.name+'.imagePresent', template);
+		return template.imagePresent.get();
+	}
+});
+Template.cropUploaderDropbox.onCreated(function(){
+	var template = this;
+	if(Meteor.isDevelopment) console.debug(template.view.name+'.created: ', template.data);
+	template.imagePresent = CropUploader.instance[template.data.thumbnailID].imagePresent;
+});
+Template.cropUploaderDropbox.onRendered(function(){
+	var template = this;
+	var canvasID = template.data.canvasID;
+	// console.log(template.view.name+'.rendered', template.data);
+	if(template.data.dropboxImage)
+	{
+		template.$('#dropboxImage').attr('src',template.data.dropboxImage);
+	}
+});
+Template.cropUploaderDropbox.events({
+	'onload canvas': function(e,t) {
+		// console.log('onload canvas');
+	    // t.$('#dropboxImage').addClass('hidden');
+		t.$('#'+t.data.canvasID).removeClass('hidden');
+		// t.$('input[type="url"]').addClass('hidden');
+	},
+	'uploaded canvas': function(e, t, payload) {
+		// console.log('uploaded canvas');
+		t.$('#'+t.data.canvasID).addClass('hidden');
+	    // t.$('#dropboxImage').removeClass('hidden');
+		// t.$('input[type="url"]').removeClass('hidden');
+	}
+});
+Template.cropUploaderDropbox.helpers({
+	width: function() {
+		var template = Template.instance();
+		return template.data.previewWidth ? template.data.previewWidth : template.data.thumbnailWidth;
+	},
+	height: function() {
+		var template = Template.instance();
+		return template.data.previewHeight ? template.data.previewHeight : template.data.thumbnailHeight;
+	},
+	imagePresent: function(){
+		var template = Template.instance();
+		return template.imagePresent.get();
+	},
+});
+Template.cropUploaderProgressBar.onDestroyed(function(){
+	CropUploader.uploading.set(false);
+});
+Template.cropUploaderProgressBar.helpers({
+	progress: function () {
+		return CropUploader.uploader ? Math.round(CropUploader.uploader.progress() * 100) : 0;
+	}
+})
 Template.cropUploaderImages.onRendered(function(){
 	var template = this;
 	template.subscribe('cropUploaderImages');
@@ -432,26 +442,6 @@ Template.cropUploaderImages.helpers({
 		return CropUploader.images.find();
 	}
 });
-// Template.cropUploaderImages.events({
-// 	'mouseenter img':function(e,t) {
-// 		var image = CropUploader.images.findOne(e.target.id);
-// 		if(image) {
-// 			$('html').css({
-// 				background: 'url('+image.url+') no-repeat center center fixed',
-// 				backgroundSize: 'cover'
-// 			})
-// 		}
-// 	},
-// 	'mouseleave img': function(e,t) {
-// 		$('html').css('background','none');
-// 	},
-// 	'click img': function(e,t) {
-// 		if(confirm('Delete this image?'))
-// 		{
-// 			CropUploader.images.remove(e.target.id);
-// 		}
-// 	}
-// });
 Template.cropUploaderCropper.onCreated(function () {
 	var template = this;
 	CropUploader.crop.template = template;
@@ -469,38 +459,37 @@ Template.cropUploaderCropper.onCreated(function () {
 		template.thumbnailWidth = 100;
 	}
 
-	var options = {
-		aspectRatio: template.aspectRatio,
-		resizable: true,
-		rotatable: true,
-		scalable: true,
-		checkOrientation: true,
-		// minCanvasHeight: 500,
-		checkImageOrigin: navigator.userAgent.match(/9.*Safari/)!==null,
-		preview: ".img-preview",
-		data: {
-			x: 10,
-			y: 10,
-			width: template.thumbnailWidth,
-			height: template.thumbnailHeight
-		},
-		// dragend: function() {
-		//   console.log('dragend');
-		// },
-		built: function() {
-			// this is image
-			if(Meteor.isDevelopment)
-				console.debug(template.view.name+'.onCreated built', options);
-			template.$('button.hidden').removeClass('hidden');
-			template.$('#crop-image-loading').fadeOut();
-			//
-			// this will distort getDataURL
-			//
-			// if(template.data.exif.Orientation && template.data.exif.Orientation == 'bottom-right')
-			//   template.$('img').addClass(template.data.exif.Orientation);
-		}
-	};
-	$.fn.cropper.setDefaults(options);
+	CropUploader.crop.options.aspectRatio = template.aspectRatio;
+	CropUploader.crop.options.checkImageOrigin = navigator.userAgent.match(/9.*Safari/)!==null;
+	CropUploader.crop.options.data.width = template.thumbnailWidth;
+	CropUploader.crop.options.data.height = template.thumbnailHeight;
+
+	// var options = {
+	// 	aspectRatio: template.aspectRatio,
+	// 	resizable: true,
+	// 	rotatable: true,
+	// 	scalable: true,
+	// 	checkOrientation: true,
+	// 	// minCanvasHeight: 500,
+	// 	preview: ".img-preview",
+	// 	data: {
+	// 		x: 10,
+	// 		y: 10,
+	// 		width: template.thumbnailWidth,
+	// 		height: template.thumbnailHeight
+	// 	},
+	// 	// dragend: function() {
+	// 	//   console.log('dragend');
+	// 	// },
+	// 	built: function() {
+	// 		// this is image
+	// 		if(Meteor.isDevelopment)
+	// 			console.debug(template.view.name+'.onCreated built', CropUploader.crop.options);
+	// 		template.$('button.hidden').removeClass('hidden');
+	// 		template.$('#crop-image-loading').fadeOut();
+	// 	}
+	// };
+	$.fn.cropper.setDefaults(CropUploader.crop.options);
 
 	template.canvas = null;
 	//
@@ -513,18 +502,10 @@ Template.cropUploaderCropper.onCreated(function () {
 		// save the cropper handle in the template
 		// template.cropimage = template.$(".image-container > img");
 		template.cropimage = template.$("#crop-image");
-		// template.cropimage[0].onload = function(){
-		//   template.cropimagedimensions = {
-		//     width: template.cropimage[0].width,
-		//     height: template.cropimage[0].height
-		//   };
-		// };
-		// add the checkImageOrigin for AppleWebKit
-		// if(isWebKit) options['checkImageOrigin'] = true;//'Anonymous';
 		//
 		// initialize the cropper
 		//
-		template.cropimage.cropper(options);
+		template.cropimage.cropper(CropUploader.crop.options);
 	}
 });
 Template.cropUploaderCropper.onRendered(function () {
