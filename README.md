@@ -4,7 +4,7 @@ The purpose of this package is to provide an easy image upload that automaticall
 
 ## requires meteor-slingshot and currently only supports Slingshot.S3Storage
 
-### I never tested without anonymous upload, so accounts-password is also required as a minimum
+### I never tested without anonymous upload, so accounts-password is also required as a minimum. BREAKING: the caller needs to check if the currentUser is allowed to upload
 
 Any app using this package must setup Slingshot and then call the `CropUploader.init` method with the name of the directive, and the subdirectory in the S3 bucket.
 
