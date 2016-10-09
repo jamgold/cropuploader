@@ -14,6 +14,25 @@ Template.cropUploader.onCreated(function(){
 	template.thumbnailID = template.data.thumbnailID || undefined;
 	if(template.thumbnailID == undefined) template.thumbnailID = 'thumbnail_img';
 	CropUploader.instance[template.thumbnailID] = template;
+	template.processFile = function(file) {
+		EXIF.getData(file,function() {
+			// this = file
+			if(Meteor.isDevelopment) console.info(EXIF.pretty(this));
+			template.orientation = EXIF.getTag(this,"Orientation");
+			template.make = EXIF.getTag(this,"Make");
+			//
+			// pass our template.thumbnail_img into the reader.onload
+			// so we can determine the md5hash
+			//
+			template.reader.onload = (function(aImg) { return function(e) {
+				template.md5hash = MD5(e.target.result);
+				// this will trigger image.onload in onRendered
+				aImg.src = e.target.result;
+				// template.$('input[type="url"]').val();
+			}; })(template.thumbnail_img);
+			template.reader.readAsDataURL(this);
+		});
+	}
 });
 Template.cropUploader.onRendered(function() {
 	var template = this;
@@ -32,7 +51,7 @@ Template.cropUploader.onRendered(function() {
 	if(template.thumbnailWidth == undefined)
 		template.thumbnailWidth = 100;
 
-	template.preview = template.data.previewID ? document.getElementById(template.data.previewID) : document.getElementById('preview');
+	template.preview = template.data.previewID ? template.find('#'+template.data.previewID) : template.find('#preview');
 
 	if(!template.preview)
 	{
@@ -42,7 +61,7 @@ Template.cropUploader.onRendered(function() {
 		document.body.appendChild(template.preview);
 	}
 
-	template.thumbnail_img = document.getElementById(template.thumbnailID);
+	template.thumbnail_img = template.find('#'+template.thumbnailID);
 	if(!template.thumbnail_img)
 	{
 		if(Meteor.isDevelopment) console.debug('creating #thumbnail_img');
@@ -54,7 +73,7 @@ Template.cropUploader.onRendered(function() {
 		template.preview.appendChild(template.thumbnail_img);
 	}
 
-	template.thumbnailCanvas = document.getElementById(template.canvasID);
+	template.thumbnailCanvas = template.find('#'+template.canvasID);
 	if(!template.thumbnailCanvas)
 	{
 		template.thumbnailCanvas = document.createElement('canvas');
@@ -74,7 +93,7 @@ Template.cropUploader.onRendered(function() {
 	//
 	// everything will get loaded into the originalCanvas
 	//
-	template.originalCanvas = document.getElementById(template.canvasID+'_original');
+	template.originalCanvas = template.find('#'+template.canvasID+'_original');
 	if(!template.originalCanvas)
 	{
 		template.originalCanvas = document.createElement('canvas');
@@ -196,24 +215,24 @@ Template.cropUploader.events({
 	'change input.crop-uploader-file': function(e, template) {
 		template.$('input[type="url"]').val('');
 		var file = template.$('input[type="file"]')[0].files[0];
-		EXIF.getData(file,function() {
-			// this = file
-			if(Meteor.isDevelopment) console.info(EXIF.pretty(this));
-			template.orientation = EXIF.getTag(this,"Orientation");
-			template.make = EXIF.getTag(this,"Make");
-			// console.log('orientation '+template.orientation, this);
-			//
-			// pass our template.thumbnail_img into the reader.onload
-			// so we can determine the md5hash
-			//
-			template.reader.onload = (function(aImg) { return function(e) {
-				template.md5hash = MD5(e.target.result);
-				// this will trigger image.onload in onRendered
-				aImg.src = e.target.result;
-				// template.$('input[type="url"]').val();
-			}; })(template.thumbnail_img);
-			template.reader.readAsDataURL(this);
-		});
+		template.processFile(file);
+		// EXIF.getData(file,function() {
+		// 	// this = file
+		// 	if(Meteor.isDevelopment) console.info(EXIF.pretty(this));
+		// 	template.orientation = EXIF.getTag(this,"Orientation");
+		// 	template.make = EXIF.getTag(this,"Make");
+		// 	//
+		// 	// pass our template.thumbnail_img into the reader.onload
+		// 	// so we can determine the md5hash
+		// 	//
+		// 	template.reader.onload = (function(aImg) { return function(e) {
+		// 		template.md5hash = MD5(e.target.result);
+		// 		// this will trigger image.onload in onRendered
+		// 		aImg.src = e.target.result;
+		// 		// template.$('input[type="url"]').val();
+		// 	}; })(template.thumbnail_img);
+		// 	template.reader.readAsDataURL(this);
+		// });
 	},
 	'click button.crop-uploader-reset': function(e,template) {
 		template.imagePresent.set(false);
@@ -234,13 +253,14 @@ Template.cropUploader.events({
 		if(imagePresent)
 		{
 			CropUploader.uploader = new Slingshot.Upload(CropUploader.name, {uuid: uuid });
-			var canvas = document.getElementById(template.canvasID);
-			if(canvas && canvas.toBlob)
+			var thumbnailCanvas = template.thumbnailCanvas;// template.find('#'+template.canvasID);
+			var originalCanvas = template.originalCanvas;
+			if( thumbnailCanvas && thumbnailCanvas.toBlob && originalCanvas && originalCanvas.toBlob )
 			{
 				//
 				// first save the blob (thumbnail)
 				//
-				canvas.toBlob(function(blob) {
+				thumbnailCanvas.toBlob(function(blob) {
 					//
 					// set the name which will get used in the uploader/key function
 					//
@@ -257,8 +277,7 @@ Template.cropUploader.events({
 							//
 							// we have uploaded the thumbnail, so now upload original
 							//
-							canvas = document.getElementById(template.originalCanvas.id);
-							canvas.toBlob(function(blob){
+							originalCanvas.toBlob(function(blob){
 								blob.name = uuid+'.png';
 								var image = {
 									name: blob.name
@@ -352,6 +371,11 @@ Template.cropUploader.helpers({
 			break;
 		}
 		return template;
+	},
+	data: function() {
+		var data = Template.currentData();
+		data.parentInstance = Template.instance();
+		return data;
 	}
 });
 Template.cropUploaderURL.onCreated(function(){
@@ -386,12 +410,12 @@ Template.cropUploaderURL.helpers({
 Template.cropUploaderDropbox.onCreated(function(){
 	var template = this;
 	if(Meteor.isDevelopment) console.debug(template.view.name+'.created: ', template.data);
-	template.imagePresent = CropUploader.instance[template.data.thumbnailID].imagePresent;
+	// template.imagePresent = CropUploader.instance[template.data.thumbnailID].imagePresent;
 });
 Template.cropUploaderDropbox.onRendered(function(){
 	var template = this;
 	var canvasID = template.data.canvasID;
-	// console.log(template.view.name+'.rendered', template.data);
+
 	if(template.data.dropboxImage)
 	{
 		template.$('#dropboxImage').attr('src',template.data.dropboxImage);
@@ -422,7 +446,48 @@ Template.cropUploaderDropbox.helpers({
 	},
 	imagePresent: function(){
 		var template = Template.instance();
-		return template.imagePresent.get();
+		return template.data.parentInstance.imagePresent.get();
+	},
+});
+Template.cropUploaderFile.onRendered(function(){
+	var template = this;
+	var dropfile = template.find('#crop-uploader-label-'+template.data.thumbnailID);
+	if(Meteor.isDevelopment) console.info(template.view.name+'.rendered', dropfile);
+	dropfile.addEventListener('dragover', function(e) {
+	  e.preventDefault();
+	  e.stopPropagation();
+	  dropfile.classList.add('dragover');
+	});
+	dropfile.addEventListener('dragleave', function(e) {
+	  e.preventDefault();
+	  e.stopPropagation();
+	  dropfile.classList.remove('dragover');
+	});
+	dropfile.addEventListener('drop', function(e) {
+	  e.preventDefault();
+	  e.stopPropagation();
+	  dropfile.classList.remove('dragover');
+	  var files;
+      if(e.dataTransfer) {
+        files = e.dataTransfer.files;
+      } else if(e.target) {
+        files = e.target.files;
+      }
+      template.data.parentInstance.processFile(files[0]);
+	});
+	if(isMobile)
+		dropfile.addEventListener('click', function() {
+		  template.$('#crop-uploader-file-'+template.data.thumbnailID).click();
+		});
+});
+Template.cropUploaderFile.helpers({
+	width: function() {
+		var template = Template.instance();
+		return template.data.previewWidth ? template.data.previewWidth : template.data.thumbnailWidth;
+	},
+	height: function() {
+		var template = Template.instance();
+		return template.data.previewHeight ? template.data.previewHeight : template.data.thumbnailHeight;
 	},
 });
 Template.cropUploaderProgressBar.onDestroyed(function(){

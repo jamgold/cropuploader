@@ -36,6 +36,9 @@ h6.id {
 	display:block;
 	opacity:0;
 }
+label.dragover {
+	background-color: green;
+}
 @media screen and (max-width: 414px) {
 	#crop-image-loading {
 		left: 15%;

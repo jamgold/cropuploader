@@ -1,5 +1,5 @@
 <template name="cropUploader">
-	{{>UI.dynamic template=cropUploaderTemplate}}
+	{{>UI.dynamic template=cropUploaderTemplate data=data}}
 </template>
 
 <template name="cropUploaderURL">
@@ -23,22 +23,25 @@
 	<canvas id="{{canvasID}}" class="preview hidden img-rounded" width="{{width}}" height="{{height}}"></canvas>
 	<img id="{{thumbnailID}}" class="hidden">
 	{{#unless imagePresent}}
-		<label class="btn btn-default" style="height:{{height}}px" for="crop-uploader-file-{{thumbnailID}}">
-		    <input id="crop-uploader-file-{{thumbnailID}}" class="crop-uploader-file" thumbnailID="{{thumbnailID}}" type="file" style="display:none;">
-		    {{#if dropboxImage}}
-		    	<img id="dropboxImage" width="100%" height="100%" src="{{dropboxImage}}" alt="Click Here To Add File">
-		    {{else}}
-			    Click To Select Image
-			    <br/>
-			    <i class="fa fa-picture-o" aria-hidden="true"></i>
-		    {{/if}}
-		</label>
+		{{>cropUploaderFile}}
 	{{else}}
 		<div class="crop-uploader-image-buttons">
 			<button class="btn btn-xs btn-success crop-uploader-upload">Upload</button>
 			<button class="btn btn-xs btn-danger crop-uploader-reset">Reset</button>
 		</div>
 	{{/unless}}
+</template>
+
+<template name="cropUploaderFile">
+	<label id="crop-uploader-label-{{thumbnailID}}" class="btn btn-default" style="height:{{height}}px" for="crop-uploader-file-{{thumbnailID}}">
+		<input id="crop-uploader-file-{{thumbnailID}}" class="crop-uploader-file" thumbnailID="{{thumbnailID}}" type="file" style="display:none;">
+	    {{#if dropboxImage}}
+	    	<img id="dropboxImage" width="100%" height="100%" src="{{dropboxImage}}" alt="Click Here To Add File">
+	    {{else}}
+		    Click To Select Image
+		    <h1> <i class="fa fa-picture-o" aria-hidden="true"></i></h1>
+	    {{/if}}
+	</label>
 </template>
 
 <template name="cropUploaderBootstrap">
