@@ -10,6 +10,7 @@ CropUploader = {
 	uploading: new ReactiveVar(false),
 	uploadingMessage: new ReactiveVar(''),
 	instance: {},
+	debug: false,
 	derivative: {
 		replace:function(imageid, name, derivative) {
 			var self = this;

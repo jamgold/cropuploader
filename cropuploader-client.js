@@ -7,7 +7,7 @@ Template.cropUploader.onCreated(function(){
 			template.addons[key] = val;
 		}
 	});
-	if(Meteor.isDevelopment) console.debug(template.view.name+'.created addons: ', template.addons, template.data);
+	if(CropUploader.debug) console.debug(template.view.name+'.created addons: ', template.addons, template.data);
 	template.allowURL = template.data.allowURL === true;
 	template.reader = new FileReader();
 	template.imagePresent = new ReactiveVar(false);
@@ -17,7 +17,7 @@ Template.cropUploader.onCreated(function(){
 	template.processFile = function(file) {
 		EXIF.getData(file,function() {
 			// this = file
-			if(Meteor.isDevelopment) console.info(EXIF.pretty(this));
+			if(CropUploader.debug) console.info('processFile EXIF',EXIF.pretty(this));
 			template.orientation = EXIF.getTag(this,"Orientation");
 			template.make = EXIF.getTag(this,"Make");
 			//
@@ -55,7 +55,7 @@ Template.cropUploader.onRendered(function() {
 
 	if(!template.preview)
 	{
-		if(Meteor.isDevelopment) console.debug('cropUploader added div#preview');
+		if(CropUploader.debug) console.debug('cropUploader added div#preview');
 		template.preview = document.createElement('div');
 		template.preview.id = 'preview';
 		document.body.appendChild(template.preview);
@@ -64,7 +64,7 @@ Template.cropUploader.onRendered(function() {
 	template.thumbnail_img = template.find('#'+template.thumbnailID);
 	if(!template.thumbnail_img)
 	{
-		if(Meteor.isDevelopment) console.debug('creating #thumbnail_img');
+		if(CropUploader.debug) console.debug('creating #thumbnail_img');
 		template.thumbnail_img = document.createElement('img');
 		template.thumbnail_img.id = template.thumbnailID;
 		template.thumbnail_img.classList.add('hidden');
@@ -83,7 +83,7 @@ Template.cropUploader.onRendered(function() {
 		template.thumbnailCanvas.classList.add('hidden');
 		template.thumbnailCanvas.classList.add('preview');
 		template.preview.appendChild(template.thumbnailCanvas);
-		if(Meteor.isDevelopment) console.debug('created canvas '+template.canvasID);
+		if(CropUploader.debug) console.debug('created canvas '+template.canvasID);
 	}
 	// else
 	// {
@@ -102,14 +102,15 @@ Template.cropUploader.onRendered(function() {
 		template.originalCanvas.classList.add('hidden');
 		template.preview.appendChild(template.originalCanvas);
 		// $('.preview-canvas')[0].appendChild(template.originalCanvas);
-		if(Meteor.isDevelopment) console.debug('created canvas '+template.canvasID+'_original');
+		if(CropUploader.debug) console.debug('created canvas '+template.canvasID+'_original');
 	}
 	//
 	// thumbnail_img.onload will handle the thumbnailification and orientation
 	//
 	template.thumbnail_img.onload = function cropUploaderImageOnload(e) {
 		var thumbnail_dataUrl = template.thumbnail_img.src;
-		// console.log(`thumbnail_img.onload: ${template.make} ${template.orientation}`);
+		// if(CropUploader.debug) console.info(`thumbnail_img.onload: ${template.make} ${template.orientation}`);
+		if(CropUploader.debug) console.debug('cropUploaderImageOnload',e);
 		var cc = {
 			x: 0,
 			y: 0,
@@ -218,7 +219,7 @@ Template.cropUploader.events({
 		template.processFile(file);
 		// EXIF.getData(file,function() {
 		// 	// this = file
-		// 	if(Meteor.isDevelopment) console.info(EXIF.pretty(this));
+		// 	if(CropUploader.debug) console.info(EXIF.pretty(this));
 		// 	template.orientation = EXIF.getTag(this,"Orientation");
 		// 	template.make = EXIF.getTag(this,"Make");
 		// 	//
@@ -380,7 +381,7 @@ Template.cropUploader.helpers({
 });
 Template.cropUploaderURL.onCreated(function(){
 	var template = this;
-	if(Meteor.isDevelopment) console.debug(template.view.name+'.created: ', template.data);
+	if(CropUploader.debug) console.debug(template.view.name+'.created: ', template.data);
 	template.imagePresent = CropUploader.instance[template.data.thumbnailID].imagePresent;
 })
 Template.cropUploaderURL.events({
@@ -409,7 +410,7 @@ Template.cropUploaderURL.helpers({
 });
 Template.cropUploaderDropbox.onCreated(function(){
 	var template = this;
-	if(Meteor.isDevelopment) console.debug(template.view.name+'.created: ', template.data);
+	if(CropUploader.debug) console.debug(template.view.name+'.created: ', template.data);
 	// template.imagePresent = CropUploader.instance[template.data.thumbnailID].imagePresent;
 });
 Template.cropUploaderDropbox.onRendered(function(){
@@ -452,7 +453,7 @@ Template.cropUploaderDropbox.helpers({
 Template.cropUploaderFile.onRendered(function(){
 	var template = this;
 	var dropfile = template.find('#crop-uploader-label-'+template.data.thumbnailID);
-	if(Meteor.isDevelopment) console.info(template.view.name+'.rendered', dropfile);
+	if(CropUploader.debug) console.info(template.view.name+'.rendered', dropfile);
 	dropfile.addEventListener('dragover', function(e) {
 	  e.preventDefault();
 	  e.stopPropagation();
@@ -548,7 +549,7 @@ Template.cropUploaderCropper.onCreated(function () {
 	// 	// },
 	// 	built: function() {
 	// 		// this is image
-	// 		if(Meteor.isDevelopment)
+	// 		if(CropUploader.debug)
 	// 			console.debug(template.view.name+'.onCreated built', CropUploader.crop.options);
 	// 		template.$('button.hidden').removeClass('hidden');
 	// 		template.$('#crop-image-loading').fadeOut();
@@ -561,7 +562,7 @@ Template.cropUploaderCropper.onCreated(function () {
 	//
 	template.initCropper = function(template) {
 		// if(!template.view.isRendered) return;
-		if(Meteor.isDevelopment) console.debug('initCropper');
+		if(CropUploader.debug) console.debug('initCropper');
 		if(!template.original) throw new Meteor.Error(403, 'image not found');
 		// console.log(template.data.exif);
 		// save the cropper handle in the template
@@ -592,7 +593,7 @@ Template.cropUploaderCropper.onRendered(function () {
 	Tracker.afterFlush(function () {
 		// template.initCropper(template);
 		img.onload = function() {
-			if(Meteor.isDevelopment) console.debug('img loaded');
+			if(CropUploader.debug) console.debug('img loaded');
 			canvas.width = img.width;
 			canvas.height = img.height;
 			ctx.drawImage( img, 0, 0 );

@@ -243,23 +243,24 @@ CropUploader.images.after.remove(function(userId, image) {
 			files.push( relativeUrl );
 		}
 	}
-
-	var deleteMultiple = CropUploader.knox.deleteMultiple( files , function(error, result){
-		// console.log('CropUploader.images.remove result', result);
-		if(error)
-		{
-			console.log(' - error ', error);
-			// throw new Meteor.Error(500, "An error occured deleting your file");
-			future.return(false);
-		}
-		else 
-		{
-			console.log(' - files', files);
-			future.return(true);
-		}
-	});
-	// console.log(' - deleteMultiple', files);
-	return future.wait();
+	// if(files.length>0) {
+		var deleteMultiple = CropUploader.knox.deleteMultiple( files , function(error, result){
+			// console.log('CropUploader.images.remove result', result);
+			if(error)
+			{
+				console.log(' - error ', error);
+				// throw new Meteor.Error(500, "An error occured deleting your file");
+				future.return(false);
+			}
+			else 
+			{
+				console.log(' - files', files);
+				future.return(true);
+			}
+		});
+		// console.log(' - deleteMultiple', files);
+		return future.wait();
+	// }
 });
 
 Meteor.startup(function () {
