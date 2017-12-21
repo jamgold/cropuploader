@@ -67,14 +67,14 @@
 
 <template name="cropUploaderImages">
 	  <div class="images" id="images">
-		  {{#each images}}
+		  {{#each image in images}}
 		  	<div class="thumbnail">
-		  		{{#if derivatives.thumbnail}}
-			  	<img src="{{derivatives.thumbnail}}" id="{{_id}}">
+		  		{{#if image.derivatives.thumbnail}}
+			  	<img src="{{image.derivatives.thumbnail}}" id="{{image._id}}">
 		  		{{else}}
-		  		<img src="{{url}}" width="100" height="100" id="{{_id}}">
+		  		<img src="{{image.url}}" width="100" height="100" id="{{image._id}}">
 		  		{{/if}}
-			  	<h6 class="id">{{_id}}</h6>
+			  	<h6 class="id">{{image._id}}</h6>
 		  	</div>
 		  {{/each}}
 		  <div class="preview thumbnail">

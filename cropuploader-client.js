@@ -109,7 +109,6 @@ Template.cropUploader.onRendered(function() {
 	//
 	template.thumbnail_img.onload = function cropUploaderImageOnload(e) {
 		var thumbnail_dataUrl = template.thumbnail_img.src;
-		// if(CropUploader.debug) console.info(`thumbnail_img.onload: ${template.make} ${template.orientation}`);
 		if(CropUploader.debug) console.debug('cropUploaderImageOnload',e);
 		var cc = {
 			x: 0,
@@ -476,7 +475,7 @@ Template.cropUploaderFile.onRendered(function(){
       }
       template.data.parentInstance.processFile(files[0]);
 	});
-	if(isMobile)
+	if(WebApp.isMobile)
 		dropfile.addEventListener('click', function() {
 		  template.$('#crop-uploader-file-'+template.data.thumbnailID).click();
 		});
