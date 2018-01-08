@@ -9,6 +9,7 @@ CropUploader = {
 	uploader: null,
 	uploading: new ReactiveVar(false),
 	uploadingMessage: new ReactiveVar(''),
+	processing: new ReactiveVar(false),
 	instance: {},
 	debug: false,
 	derivative: {

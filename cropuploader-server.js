@@ -125,12 +125,15 @@ Meteor.methods({
 		//     }
 		// });
 		try {
-		    var response = HTTP.call('GET', url,{npmRequestOptions: { encoding: null }});
-		    var content_type = response.headers['content-type'];
-		    if(content_type.match(/^image/))
-		        return "data:" + content_type + ";base64," + new Buffer(response.content).toString('base64');
-		    else
-		        throw new Meteor.Error(500,'wrong content type', 'the url '+url+' returned '+content_type);
+			var response = HTTP.call('GET', url,{npmRequestOptions: { encoding: null }});
+			var content_type = response.headers['content-type'];
+			var content_length = response.headers['content-length'];
+			if(content_type.match(/^image/)) {
+				console.log(`cropUploaderUrl ${content_type} of ${content_length} bytes`);
+				return "data:" + content_type + ";base64," + new Buffer(response.content).toString('base64');
+			} else {
+				throw new Meteor.Error(500,'wrong content type', 'the url '+url+' returned '+content_type);
+			}
 		} catch (e) {
 		    throw new Meteor.Error(e.statusCode, 'url wrong', 'the '+url+' is wrong');
 		}
