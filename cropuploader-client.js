@@ -244,7 +244,7 @@ Template.cropUploader.events({
 	'click button.crop-uploader-upload': function(e,template) {
 		// use the originalCanvas attribute because we do not want reactivity here
 		var imagePresent = template.originalCanvas.getAttribute('imagePresent') == "true";
-		var uuid = Meteor.uuid();
+		var uuid = Random.id();
 		
 		e.preventDefault();
 

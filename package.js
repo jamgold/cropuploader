@@ -20,7 +20,7 @@ Package.onUse(function(api) {
   api.versionsFrom('METEOR@1.0');
   // api.use('standard-app-packages', cas);
   api.use(['tracker','session','templating','handlebars'], 'client');
-  api.use(['reactive-var','alanning:roles@1.2.9','matb33:collection-hooks@0.8.0']);
+  api.use(['reactive-var','alanning:roles@1.2.9','matb33:collection-hooks@0.8.0','random']);
   api.use(['raix:md5@1.0.2','edgee:slingshot@0.6.2'], cas , {weak: true});
   api.imply(['raix:md5','edgee:slingshot','alanning:roles']);
   // Npm.require('knox');
